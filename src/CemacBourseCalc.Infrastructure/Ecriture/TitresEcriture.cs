@@ -10,10 +10,12 @@ public sealed class TitresEcriture(CalcDbContext db) : ITitresEcriture
     public Task<bool> IsinExisteAsync(string isin, CancellationToken ct) =>
         db.Titres.AnyAsync(t => t.Isin == Isin.Creer(isin), ct);
 
-    public async Task<int> AjouterAsync(Titre titre, CancellationToken ct)
+    public Task<bool> EmetteurExisteAsync(Guid emetteurId, CancellationToken ct) =>
+        db.Emetteurs.AnyAsync(e => e.Id == emetteurId, ct);
+
+    public async Task AjouterAsync(Titre titre, CancellationToken ct)
     {
         db.Titres.Add(titre);
         await db.SaveChangesAsync(ct);
-        return titre.Id;
     }
 }

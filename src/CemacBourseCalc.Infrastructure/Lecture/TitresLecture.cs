@@ -9,15 +9,17 @@ namespace CemacBourseCalc.Infrastructure.Lecture;
 public sealed class TitresLecture(NpgsqlDataSource source) : ITitresLecture
 {
     private const string Sql = """
-        SELECT id         AS Id,
-               isin       AS Isin,
-               nom        AS Nom,
-               emetteur   AS Emetteur,
-               left(isin, 2) AS Pays,
-               type_titre AS TypeTitre,
-               nominal    AS Nominal
-        FROM titre
-        ORDER BY nom
+        SELECT t.id          AS Id,
+               t.isin        AS Isin,
+               t.nom         AS Nom,
+               e.nom         AS Emetteur,
+               e.pays_code   AS Pays,
+               t.type_titre  AS TypeTitre,
+               t.nominal     AS Nominal,
+               t.statut      AS Statut
+        FROM titre t
+        JOIN emetteur e ON e.id = t.emetteur_id
+        ORDER BY t.nom
         """;
 
     public async Task<IReadOnlyList<TitreResumeDto>> ListerAsync(CancellationToken ct)

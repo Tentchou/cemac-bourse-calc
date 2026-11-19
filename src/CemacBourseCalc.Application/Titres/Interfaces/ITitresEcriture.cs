@@ -6,5 +6,6 @@ namespace CemacBourseCalc.Application.Titres.Interfaces;
 public interface ITitresEcriture
 {
     Task<bool> IsinExisteAsync(string isin, CancellationToken ct);
-    Task<int> AjouterAsync(Titre titre, CancellationToken ct);
+    Task<bool> EmetteurExisteAsync(Guid emetteurId, CancellationToken ct);
+    Task AjouterAsync(Titre titre, CancellationToken ct);
 }

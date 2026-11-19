@@ -9,8 +9,8 @@ public sealed class Action : Titre
 
     private Action() { } // EF Core
 
-    public Action(Isin isin, string nom, string emetteur, decimal nominal, long nombreTitres)
-        : base(isin, nom, emetteur, nominal)
+    public Action(Isin isin, string nom, Guid emetteurId, decimal nominal, DateOnly? dateAdmission, long nombreTitres)
+        : base(isin, nom, emetteurId, TypeTitre.Action, nominal, dateAdmission)
     {
         if (nombreTitres <= 0) throw new DomainException("Le nombre de titres de la société doit être supérieur à 0.");
         NombreTitres = nombreTitres;

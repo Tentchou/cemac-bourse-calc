@@ -3,7 +3,7 @@ import { listerTitres } from '../api/titres'
 
 const fcfa = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
 
-const libelleType = { OBLIGATION: 'Obligation', ACTION: 'Action' }
+const libelleType = { Obligation: 'Obligation', Action: 'Action' }
 
 export default function ListeTitres() {
   const [titres, setTitres] = useState(null)
