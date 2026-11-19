@@ -1,0 +1,35 @@
+using CemacBourseCalc.Application.Titres.Interfaces;
+using CemacBourseCalc.Infrastructure.Ecriture;
+using CemacBourseCalc.Infrastructure.Lecture;
+using CemacBourseCalc.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+
+namespace CemacBourseCalc.Infrastructure;
+
+public static class DependencyInjection
+{
+    public const string NomChaineConnexion = "CemacBourseCalc";
+
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        var chaine = configuration.GetConnectionString(NomChaineConnexion);
+        if (string.IsNullOrWhiteSpace(chaine))
+            throw new InvalidOperationException(
+                $"La chaîne de connexion « {NomChaineConnexion} » est absente. En développement : dotnet user-secrets set \"ConnectionStrings:{NomChaineConnexion}\" \"Host=…\"");
+
+        // Une seule source de connexions (pool Npgsql), partagée par EF Core et Dapper.
+        var source = new NpgsqlDataSourceBuilder(chaine).Build();
+        services.AddSingleton(source);
+
+        services.AddDbContext<CalcDbContext>(options => options
+            .UseNpgsql(source)
+            .UseSnakeCaseNamingConvention());
+
+        services.AddScoped<ITitresEcriture, TitresEcriture>();
+        services.AddScoped<ITitresLecture, TitresLecture>();
+        return services;
+    }
+}

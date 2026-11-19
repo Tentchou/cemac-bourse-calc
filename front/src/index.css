@@ -1,0 +1,50 @@
+:root {
+  --texte: #1f2328;
+  --texte-doux: #59636e;
+  --fond: #ffffff;
+  --bordure: #d8dee4;
+  --accent: #0b6e4f;
+  --alerte-fond: #fff8e6;
+  --alerte-bordure: #e6c36a;
+  --erreur: #b42318;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--texte);
+  background: var(--fond);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --texte: #e6edf3;
+    --texte-doux: #9198a1;
+    --fond: #0d1117;
+    --bordure: #30363d;
+    --accent: #3fb68b;
+    --alerte-fond: #2b2111;
+    --alerte-bordure: #7a5c1e;
+    --erreur: #f47067;
+  }
+}
+
+body { margin: 0; background: var(--fond); }
+
+.page { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+h1 { margin: 0; color: var(--accent); }
+.sous-titre { margin-top: 4px; color: var(--texte-doux); }
+
+.avertissement {
+  padding: 10px 14px;
+  border: 1px solid var(--alerte-bordure);
+  border-radius: 8px;
+  background: var(--alerte-fond);
+}
+
+.erreur { color: var(--erreur); }
+
+.titres { width: 100%; border-collapse: collapse; }
+.titres th, .titres td { padding: 8px; border-bottom: 1px solid var(--bordure); text-align: left; }
+.titres .nombre { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  section { overflow-x: auto; }
+}
