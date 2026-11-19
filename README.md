@@ -32,10 +32,19 @@ tests/CemacBourseCalc.Domain.Tests  xUnit, cas vérifiés à la main
 
 Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus.
 
-1. Créer la base, puis enregistrer la chaîne de connexion (jamais dans un fichier versionné) :
+1. Créer la base et ses deux comptes (les mots de passe sont demandés au clavier) :
 
    ```bash
-   dotnet user-secrets set "ConnectionStrings:CemacBourseCalc" "Host=localhost;Port=5432;Database=cemac_bourse_calc;Username=postgres;Password=…" --project src/CemacBourseCalc.Api
+   psql -U postgres -f scripts/creer_base.sql
+   ```
+
+   - `cemac_app` : le compte de l'API, propriétaire de la base, sans droits de superutilisateur.
+   - `cemac_lecture` : lecture seule, pour consulter les tables (DbVisualizer…).
+
+   Puis enregistrer la chaîne de connexion de l'API, jamais dans un fichier versionné :
+
+   ```bash
+   dotnet user-secrets set "ConnectionStrings:CemacBourseCalc" "Host=localhost;Port=5432;Database=cemac_bourse_calc;Username=cemac_app;Password=…" --project src/CemacBourseCalc.Api
    ```
 
 2. Appliquer les migrations :
@@ -44,6 +53,9 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus.
    dotnet tool restore
    dotnet ef database update -p src/CemacBourseCalc.Infrastructure -s src/CemacBourseCalc.Api
    ```
+
+   Les migrations passent par le compte `cemac_app` (celui des user-secrets) : les tables lui
+   appartiennent, et `cemac_lecture` reçoit automatiquement le droit de les lire.
 
 3. Lancer l'API puis le front :
 
@@ -64,7 +76,9 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus.
 ## Feuille de route
 
 - [x] Squelette, conventions de décompte, ISIN CEMAC, titres, liste publique
-- [ ] Coupon couru et prix plein coupon, avec explication pas à pas
+- [x] Schéma des 13 tables (identifiants GUID)
+- [x] Coupon couru et prix plein coupon (Domain + API `GET api/obligations/{id}/coupon-couru`)
+- [ ] Écran du calculateur avec l'explication pas à pas
 - [ ] Échéancier : in fine, amortissement constant, différé, report au jour ouvré
 - [ ] Rendement actuariel, rendement courant, rendement du dividende
 - [ ] Administration (authentification, saisie des titres et des cours)

@@ -27,6 +27,10 @@ public sealed class Obligation : Titre
         ConventionsDecompte.Trouver(CodeConvention)
         ?? throw new DomainException($"La convention « {CodeConvention} » du titre {Nom} n'est pas connue.");
 
+    public Calculs.CaracteristiquesObligation Caracteristiques() => new(
+        Nom, Nominal, TauxFacial, Periodicite, DateJouissance, DatePremierCoupon, DateEcheance,
+        ModeRemboursement, DiffereEcheances, CodeConvention);
+
     private Obligation() { } // EF Core
 
     public Obligation(

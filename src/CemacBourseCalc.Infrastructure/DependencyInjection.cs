@@ -1,3 +1,4 @@
+using CemacBourseCalc.Application.Calculs.Interfaces;
 using CemacBourseCalc.Application.Titres.Interfaces;
 using CemacBourseCalc.Infrastructure.Ecriture;
 using CemacBourseCalc.Infrastructure.Lecture;
@@ -30,6 +31,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITitresEcriture, TitresEcriture>();
         services.AddScoped<ITitresLecture, TitresLecture>();
+        services.AddScoped<ILectureCalculs, LectureCalculs>();
         return services;
     }
 }
