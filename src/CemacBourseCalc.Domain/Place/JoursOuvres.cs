@@ -22,6 +22,14 @@ public static class JoursOuvres
         return jour;
     }
 
+    /// <summary>Un paiement prévu un jour non ouvré est reporté au premier jour ouvré qui suit.</summary>
+    public static DateOnly ReporterAuJourOuvreSuivant(DateOnly jour, IReadOnlySet<DateOnly> nonOuvres)
+    {
+        var date = jour;
+        while (!EstOuvre(date, nonOuvres)) date = date.AddDays(1);
+        return date;
+    }
+
     /// <summary>
     /// Date de règlement-livraison d'une négociation : T + délai jours ouvrés. Le coupon couru
     /// court jusqu'à cette date, comme au bulletin de la BVMAC.
