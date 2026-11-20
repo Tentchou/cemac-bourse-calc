@@ -1,3 +1,4 @@
+using CemacBourseCalc.Application.Calculs.Dtos;
 using CemacBourseCalc.Domain.Calculs;
 
 namespace CemacBourseCalc.Application.Calculs.Interfaces;
@@ -7,6 +8,9 @@ public interface ILectureCalculs
 {
     /// <summary>Les caractéristiques de l'obligation, ou null si l'identifiant n'est pas celui d'une obligation.</summary>
     Task<CaracteristiquesObligation?> ObligationAsync(Guid titreId, CancellationToken ct);
+
+    /// <summary>L'action et son dernier exercice de dividende, ou null si l'identifiant n'est pas celui d'une action.</summary>
+    Task<DernierDividendeLecture?> DernierDividendeAsync(Guid titreId, CancellationToken ct);
 
     /// <summary>La valeur brute d'un paramètre de la place, ou null s'il est absent.</summary>
     Task<string?> ParametreAsync(string cle, CancellationToken ct);

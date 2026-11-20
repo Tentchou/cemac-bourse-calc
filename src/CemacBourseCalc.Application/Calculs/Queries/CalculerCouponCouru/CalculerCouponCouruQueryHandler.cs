@@ -1,4 +1,4 @@
-using System.Globalization;
+using CemacBourseCalc.Application.Calculs.Common;
 using CemacBourseCalc.Application.Calculs.Dtos;
 using CemacBourseCalc.Application.Calculs.Interfaces;
 using CemacBourseCalc.Application.Common;
@@ -14,7 +14,6 @@ public sealed class CalculerCouponCouruQueryHandler(ILectureCalculs lecture)
 {
     /// <summary>Borne de lecture du calendrier : un délai de règlement ne dépasse jamais quelques semaines.</summary>
     private const int FenetreCalendrierJours = 60;
-    private const int DelaiMaximum = 15;
 
     public async Task<Result<CalculCouponCouruDto>> Handle(CalculerCouponCouruQuery q, CancellationToken cancellationToken)
     {
@@ -22,9 +21,8 @@ public sealed class CalculerCouponCouruQueryHandler(ILectureCalculs lecture)
         if (obligation is null)
             return Result<CalculCouponCouruDto>.Echec("Ce titre n'existe pas ou n'est pas une obligation.");
 
-        var valeurDelai = await lecture.ParametreAsync(ClesParametres.DelaiReglement, cancellationToken);
-        if (!int.TryParse(valeurDelai, NumberStyles.None, CultureInfo.InvariantCulture, out var delai) || delai > DelaiMaximum)
-            return Result<CalculCouponCouruDto>.Echec("Le délai de règlement de la place n'est pas paramétré : le calcul est indisponible pour le moment.");
+        if (await ReglesPlace.DelaiReglementAsync(lecture, cancellationToken) is not { } delai)
+            return Result<CalculCouponCouruDto>.Echec(ReglesPlace.MessageDelaiAbsent);
 
         var nonOuvres = await lecture.JoursNonOuvresAsync(
             q.DateNegociation, q.DateNegociation.AddDays(FenetreCalendrierJours), cancellationToken);

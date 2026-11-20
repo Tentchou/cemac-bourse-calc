@@ -1,3 +1,4 @@
+using CemacBourseCalc.Application.Calculs.Dtos;
 using CemacBourseCalc.Application.Calculs.Interfaces;
 using CemacBourseCalc.Domain.Calculs;
 using CemacBourseCalc.Domain.Communs;
@@ -28,7 +29,31 @@ public sealed class LectureCalculs(NpgsqlDataSource source) : ILectureCalculs
         WHERE t.id = @TitreId
         """;
 
-    private const string SqlParametre = "SELECT valeur FROM parametre WHERE cle = @Cle";
+    // Le dernier exercice seulement, ses versements additionnés (index ix_dividende_titre_id_exercice).
+    // Le net n'est sommé que si chaque versement en a un : sinon le total serait faux.
+    private const string SqlDernierDividende = """
+        SELECT t.nom          AS Nom,
+               d.exercice     AS Exercice,
+               d.brut         AS Brut,
+               d.net          AS Net,
+               COALESCE(d.versements, 0)::int AS NombreVersements
+        FROM titre t
+        JOIN action a ON a.titre_id = t.id
+        LEFT JOIN LATERAL (
+            SELECT exercice,
+                   SUM(montant_brut) AS brut,
+                   CASE WHEN COUNT(montant_net) = COUNT(*) THEN SUM(montant_net) END AS net,
+                   COUNT(*) AS versements
+            FROM dividende
+            WHERE titre_id = t.id
+            GROUP BY exercice
+            ORDER BY exercice DESC
+            LIMIT 1
+        ) d ON TRUE
+        WHERE t.id = @TitreId
+        """;
+
+    private const string SqlParametre ="SELECT valeur FROM parametre WHERE cle = @Cle";
 
     private const string SqlJoursNonOuvres = "SELECT date FROM jour_non_ouvre WHERE date BETWEEN @Du::date AND @Au::date";
 
@@ -47,6 +72,13 @@ public sealed class LectureCalculs(NpgsqlDataSource source) : ILectureCalculs
             Enum.Parse<ModeRemboursement>(ligne.ModeRemboursement),
             ligne.DiffereEcheances,
             ligne.CodeConvention);
+    }
+
+    public async Task<DernierDividendeLecture?> DernierDividendeAsync(Guid titreId, CancellationToken ct)
+    {
+        await using var connexion = await source.OpenConnectionAsync(ct);
+        return await connexion.QuerySingleOrDefaultAsync<DernierDividendeLecture>(
+            new CommandDefinition(SqlDernierDividende, new { TitreId = titreId }, cancellationToken: ct));
     }
 
     public async Task<string?> ParametreAsync(string cle, CancellationToken ct)
