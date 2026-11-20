@@ -1,4 +1,4 @@
-// Appels à l'API des titres. Un seul endroit pour les adresses.
+// Liste des titres pour l'administration (messages en français, sans traduction).
 
 export async function listerTitres() {
   const reponse = await fetch('/api/titres')

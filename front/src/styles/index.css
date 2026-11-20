@@ -1,0 +1,346 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
+
+/* =============================================================================
+   CEMAC Bourse Calc — fondations du design
+   -----------------------------------------------------------------------------
+   Couleurs : la charte de Roméo (19/11/2026), en variables. Le thème sombre ne
+   fait que les redéfinir : aucun composant n'a besoin de classes « dark: ».
+
+   Règles d'espacement (base 4 px, six pas seulement) :
+     8 px  (2)   écart entre une icône et son texte, entre deux étiquettes
+     16 px (4)   écart entre les éléments d'une grille ou d'un formulaire
+     24 px (6)   marge intérieure de toutes les cartes, en-tête de section → contenu
+     32 px (8)   marge haute d'une page
+     48 px (12)  entre deux sections sur mobile
+     64 px (16)  entre deux sections sur grand écran
+   Rayons : 16 px (cartes, champs, tableaux), pilule (boutons, étiquettes, filtres).
+   Hauteurs : 48 px pour un champ et un bouton normal, 40 px pour un petit.
+   Animations : 150 ms pour un survol, 250 ms pour une apparition.
+   ============================================================================= */
+
+:root,
+[data-theme='clair'] {
+  color-scheme: light;
+  --cbc-fond: #f7f5ef;
+  --cbc-surface: #ffffff;
+  --cbc-texte: #14213d;
+  --cbc-texte-2: #4a5568;
+  --cbc-action: #1f5bd6;
+  --cbc-sur-action: #ffffff;
+  --cbc-marque: #2f6fed; /* grandes zones uniquement, jamais en petit texte */
+  --cbc-sur-marque: #ffffff;
+  --cbc-orange: #f08a24; /* pastilles et graphiques, jamais en texte sur fond clair */
+  --cbc-orange-texte: #a9520b;
+  --cbc-whatsapp: #1a7f4b;
+  --cbc-sur-whatsapp: #ffffff;
+  --cbc-erreur: #b42318;
+  --cbc-bordure: #d8d3c7;
+  /* Institutions (couleurs relevées sur bvm-ac.org et cosumaf.org) : l'or en pastille, le texte foncé pour rester lisible. */
+  --cbc-bvmac: #bd923f;
+  --cbc-bvmac-texte: #6e4a14;
+  --cbc-cosumaf: #b6852b;
+  --cbc-cosumaf-texte: #111827;
+  --cbc-ombre: 0 1px 2px rgb(20 33 61 / 0.05), 0 4px 16px -8px rgb(20 33 61 / 0.12);
+  --cbc-ombre-haute: 0 2px 4px rgb(20 33 61 / 0.05), 0 16px 32px -16px rgb(20 33 61 / 0.22);
+}
+
+[data-theme='sombre'] {
+  color-scheme: dark;
+  --cbc-fond: #14213d;
+  --cbc-surface: #1f2e52;
+  --cbc-texte: #f7f5ef;
+  --cbc-texte-2: #bfd0ea;
+  --cbc-action: #7fa7f5;
+  --cbc-sur-action: #14213d;
+  --cbc-marque: #1f2e52;
+  --cbc-sur-marque: #f7f5ef;
+  --cbc-orange: #f08a24;
+  --cbc-orange-texte: #f08a24; /* autorisé en texte sur fond sombre */
+  --cbc-whatsapp: #4ade80;
+  --cbc-sur-whatsapp: #14213d;
+  --cbc-erreur: #ff8a80;
+  --cbc-bordure: #2e3f66;
+  --cbc-bvmac: #cfaa54;
+  --cbc-bvmac-texte: #cfaa54;
+  --cbc-cosumaf: #cc9f52;
+  --cbc-cosumaf-texte: #cc9f52;
+  --cbc-ombre: 0 1px 2px rgb(0 0 0 / 0.25), 0 4px 16px -8px rgb(0 0 0 / 0.45);
+  --cbc-ombre-haute: 0 2px 4px rgb(0 0 0 / 0.25), 0 16px 32px -16px rgb(0 0 0 / 0.6);
+}
+
+/* Couleurs dérivées de la charte (mélanges, aucune couleur nouvelle). */
+:root {
+  /* Champ de saisie : bordure plus marquée que celle des cartes, pour qu'il se voie tout de suite. */
+  --cbc-bordure-champ: color-mix(in srgb, var(--cbc-bordure) 45%, var(--cbc-texte-2));
+  /* Voile de survol et lignes paires des tableaux. */
+  --cbc-voile: color-mix(in srgb, var(--cbc-texte) 4%, transparent);
+  --cbc-rayure: var(--cbc-fond);
+  --cbc-survol-ligne: color-mix(in srgb, var(--cbc-action) 7%, var(--cbc-surface));
+  /* Skeleton : une base et un reflet qui la traverse. */
+  --cbc-squelette: color-mix(in srgb, var(--cbc-texte) 8%, var(--cbc-surface));
+  --cbc-squelette-reflet: color-mix(in srgb, var(--cbc-texte) 3%, var(--cbc-surface));
+}
+
+@theme inline {
+  --color-fond: var(--cbc-fond);
+  --color-surface: var(--cbc-surface);
+  --color-texte: var(--cbc-texte);
+  --color-texte-2: var(--cbc-texte-2);
+  --color-action: var(--cbc-action);
+  --color-sur-action: var(--cbc-sur-action);
+  --color-marque: var(--cbc-marque);
+  --color-sur-marque: var(--cbc-sur-marque);
+  --color-orange: var(--cbc-orange);
+  --color-orange-texte: var(--cbc-orange-texte);
+  --color-whatsapp: var(--cbc-whatsapp);
+  --color-sur-whatsapp: var(--cbc-sur-whatsapp);
+  --color-erreur: var(--cbc-erreur);
+  --color-bordure: var(--cbc-bordure);
+  --color-bvmac: var(--cbc-bvmac);
+  --color-bvmac-texte: var(--cbc-bvmac-texte);
+  --color-cosumaf: var(--cbc-cosumaf);
+  --color-cosumaf-texte: var(--cbc-cosumaf-texte);
+  --color-bordure-champ: var(--cbc-bordure-champ);
+  --color-voile: var(--cbc-voile);
+  --color-rayure: var(--cbc-rayure);
+  --shadow-douce: var(--cbc-ombre);
+  --shadow-haute: var(--cbc-ombre-haute);
+
+  /* Inter pour le texte et les chiffres, Plus Jakarta Sans pour les titres. */
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-titre: 'Plus Jakarta Sans Variable', 'Inter Variable', system-ui, sans-serif;
+
+  --ease-douce: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-fond font-sans text-[0.9375rem] leading-relaxed text-texte antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    overflow-x: clip; /* filet de sécurité : jamais de défilement horizontal de la page */
+    transition:
+      background-color 250ms var(--ease-douce),
+      color 250ms var(--ease-douce);
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-titre tracking-tight text-balance text-texte;
+  }
+  :focus-visible {
+    outline: 2px solid var(--cbc-action);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--cbc-action) 25%, transparent);
+  }
+}
+
+/* Chiffres alignés (tableaux, résultats, montants). */
+@utility chiffres {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11';
+}
+
+/* Bordure fine et nette : 1 px, couleur de la charte, sans transparence. */
+@utility bordure-fine {
+  border: 1px solid var(--cbc-bordure);
+}
+
+/* ---------- Apparition : fondu + montée de 8 px ; --rang décale les éléments d'une liste. ---------- */
+@keyframes cbc-apparaitre {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility apparition {
+  animation: cbc-apparaitre 250ms var(--ease-douce) both;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+}
+
+/* ---------- Dépliage animé sans JavaScript (« Comment c'est calculé », menu mobile). ---------- */
+@utility depliable {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 250ms var(--ease-douce),
+    opacity 200ms var(--ease-douce);
+  & > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+  &[data-ouvert='true'] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+/* ---------- Skeleton : forme pleine traversée par un reflet. ---------- */
+@keyframes cbc-reflet {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+@utility squelette {
+  background-color: var(--cbc-squelette);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--cbc-squelette-reflet) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: cbc-reflet 1.4s ease-in-out infinite;
+}
+
+/* ---------- Tableau rayé ----------
+   CSS pur ici : les rayures sont posées sur les cellules (et non sur la ligne) pour que la
+   première colonne, collée à gauche pendant le défilement, garde exactement le fond de sa ligne. */
+@layer components {
+  .tableau-raye {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .tableau-raye th,
+  .tableau-raye td {
+    background-color: var(--cbc-surface);
+    transition: background-color 150ms var(--ease-douce);
+  }
+  .tableau-raye tbody tr:nth-child(even) > * {
+    background-color: var(--cbc-rayure);
+  }
+  .tableau-raye tbody tr:hover > * {
+    background-color: var(--cbc-survol-ligne);
+  }
+  .tableau-raye thead th {
+    border-bottom: 1px solid var(--cbc-bordure);
+  }
+  /* Ligne de total : filet bleu de 2 px, fond teinté d'action, chiffres en gras. Jamais rayée ni survolée. */
+  .tableau-raye tfoot td,
+  .tableau-raye tfoot tr:hover > td {
+    border-top: 2px solid color-mix(in srgb, var(--cbc-action) 55%, var(--cbc-bordure));
+    background-color: color-mix(in srgb, var(--cbc-action) 9%, var(--cbc-surface));
+    color: var(--cbc-texte);
+    font-weight: 700;
+  }
+  .tableau-raye .colonne-fixe {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+  /* Quand le tableau déborde de son cadre, un filet sépare la colonne fixe de celles qui défilent. */
+  [data-deborde='true'] .tableau-raye .colonne-fixe::after {
+    content: '';
+    position: absolute;
+    inset: 0 -1px 0 auto;
+    width: 1px;
+    background: var(--cbc-bordure);
+  }
+}
+
+/* ---------- Barres de graphique : elles poussent depuis l'axe à l'apparition. ---------- */
+@keyframes cbc-pousser {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@utility pousse {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: cbc-pousser 500ms var(--ease-douce) both;
+  animation-delay: calc(var(--rang, 0) * 60ms);
+}
+
+/* Barre de composition (prix pied de coupon + coupon couru) : elle s'étire à l'apparition. */
+@keyframes cbc-etirer {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@utility etire {
+  transform-origin: left;
+  animation: cbc-etirer 600ms var(--ease-douce) both;
+}
+
+/* ---------- Calendrier : ouverture (fenêtre ou feuille sur mobile), changement de mois. ---------- */
+@keyframes cbc-surgir {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+@keyframes cbc-monter {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes cbc-fondu {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cbc-glisser {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--sens, 1) * 16px));
+  }
+}
+@utility surgit {
+  animation: cbc-monter 250ms var(--ease-douce) both;
+  @media (width >= 40rem) {
+    animation: cbc-surgir 150ms var(--ease-douce) both;
+  }
+}
+@utility fondu {
+  animation: cbc-fondu 200ms var(--ease-douce) both;
+}
+@utility glisse {
+  animation: cbc-glisser 200ms var(--ease-douce) both;
+}
+
+/* ---------- Barre de progression des requêtes, en haut de page. ---------- */
+@keyframes cbc-progresser {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@utility progresse {
+  animation: cbc-progresser 1.1s var(--ease-douce) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -3,8 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Coupon couru, prix plein coupon, échéancier et rendement des titres cotés à la BVMAC, expliqués pas à pas." />
+    <meta name="theme-color" content="#F7F5EF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14213D" media="(prefers-color-scheme: dark)" />
     <title>CEMAC Bourse Calc</title>
+    <script>
+      // Thème appliqué avant le premier affichage (pas de flash clair → sombre).
+      try {
+        var t = localStorage.getItem('cbc-theme')
+        if (t !== 'clair' && t !== 'sombre') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

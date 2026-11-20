@@ -488,3 +488,6 @@ front/dist/
 # Secrets locaux
 .env
 *.local.json
+
+# Cache Vite des maquettes
+maquettes/.vite/

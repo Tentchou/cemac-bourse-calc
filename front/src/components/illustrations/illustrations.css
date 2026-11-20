@@ -1,0 +1,126 @@
+/* =============================================================================
+   Illustrations animées des 3 étapes (accueil).
+   CSS pur ici : des images-clés précises sur des éléments SVG, que Tailwind n'exprime pas.
+
+   Principes :
+   - Le style SANS animation est l'état final (l'étape réussie) : c'est ce que voient les
+     visiteurs qui ont demandé moins d'animations, et ce qu'on voit à l'impression.
+   - Une boucle de 5 s : 0 % et 100 % = état de départ, la scène se joue entre les deux.
+   - Rien ne bouge tant que l'illustration n'est pas à l'écran (data-visible).
+   - Seuls transform et opacity sont animés : fluide, même sur un téléphone modeste.
+   ============================================================================= */
+
+.illu * {
+  transform-box: fill-box;
+}
+.illu [class*='illu-'] {
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation-play-state: paused;
+}
+.illu[data-visible='true'] [class*='illu-'] {
+  animation-play-state: running;
+}
+
+/* ---------- Étape 1 : choisir un titre (le curseur va vers une ligne, clic, la ligne s'éclaire) ---------- */
+.illu-curseur {
+  transform-box: view-box;
+  transform: translate(150px, 84px);
+  animation-name: illu-curseur;
+}
+@keyframes illu-curseur {
+  0%, 8% { transform: translate(212px, 150px); opacity: 0; }
+  14% { opacity: 1; }
+  36% { transform: translate(150px, 84px) scale(1); }
+  41% { transform: translate(150px, 84px) scale(0.86); }
+  46%, 88% { transform: translate(150px, 84px) scale(1); opacity: 1; }
+  96%, 100% { transform: translate(150px, 84px); opacity: 0; }
+}
+
+.illu-ligne-choisie {
+  opacity: 1;
+  animation-name: illu-ligne-choisie;
+}
+@keyframes illu-ligne-choisie {
+  0%, 40% { opacity: 0; }
+  48%, 90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.illu-onde {
+  transform-origin: center;
+  opacity: 0;
+  animation-name: illu-onde;
+}
+@keyframes illu-onde {
+  0%, 40% { opacity: 0; transform: scale(0.2); }
+  42% { opacity: 0.9; transform: scale(0.3); }
+  62%, 100% { opacity: 0; transform: scale(1.9); }
+}
+
+/* ---------- Étape 2 : saisir (trois champs se remplissent tour à tour, puis le bouton s'enfonce) ---------- */
+.illu-texte-1, .illu-texte-2, .illu-texte-3 {
+  transform-origin: left center;
+}
+.illu-texte-1 { animation-name: illu-texte-1; }
+.illu-texte-2 { animation-name: illu-texte-2; }
+.illu-texte-3 { animation-name: illu-texte-3; }
+@keyframes illu-texte-1 { 0%, 8% { transform: scaleX(0); } 22%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+@keyframes illu-texte-2 { 0%, 28% { transform: scaleX(0); } 38%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+@keyframes illu-texte-3 { 0%, 44% { transform: scaleX(0); } 58%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+
+.illu-focus-1, .illu-focus-2, .illu-focus-3 { opacity: 0; }
+.illu-focus-1 { animation-name: illu-focus-1; }
+.illu-focus-2 { animation-name: illu-focus-2; }
+.illu-focus-3 { animation-name: illu-focus-3; }
+@keyframes illu-focus-1 { 0%, 5% { opacity: 0; } 8%, 23% { opacity: 1; } 26%, 100% { opacity: 0; } }
+@keyframes illu-focus-2 { 0%, 25% { opacity: 0; } 28%, 39% { opacity: 1; } 42%, 100% { opacity: 0; } }
+@keyframes illu-focus-3 { 0%, 41% { opacity: 0; } 44%, 59% { opacity: 1; } 62%, 100% { opacity: 0; } }
+
+.illu-bouton {
+  transform-origin: center;
+  animation-name: illu-bouton;
+}
+@keyframes illu-bouton {
+  0%, 68% { transform: scale(1); }
+  72% { transform: scale(0.94); }
+  77%, 100% { transform: scale(1); }
+}
+
+/* ---------- Étape 3 : lire (le montant apparaît, la barre se remplit, la formule se déroule, coche) ---------- */
+.illu-montant, .illu-barre-1, .illu-barre-2 {
+  transform-origin: left center;
+}
+.illu-montant { animation-name: illu-montant; }
+.illu-barre-1 { animation-name: illu-barre-1; }
+.illu-barre-2 { animation-name: illu-barre-2; }
+@keyframes illu-montant { 0%, 8% { transform: scaleX(0); } 24%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+@keyframes illu-barre-1 { 0%, 26% { transform: scaleX(0); } 42%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+@keyframes illu-barre-2 { 0%, 42% { transform: scaleX(0); } 48%, 92% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
+
+.illu-formule-1, .illu-formule-2, .illu-formule-3 { opacity: 1; }
+.illu-formule-1 { animation-name: illu-formule-1; }
+.illu-formule-2 { animation-name: illu-formule-2; }
+.illu-formule-3 { animation-name: illu-formule-3; }
+@keyframes illu-formule-1 { 0%, 52% { opacity: 0; transform: translateY(4px); } 58%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes illu-formule-2 { 0%, 58% { opacity: 0; transform: translateY(4px); } 64%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes illu-formule-3 { 0%, 64% { opacity: 0; transform: translateY(4px); } 70%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+.illu-coche {
+  transform-origin: center;
+  animation-name: illu-coche;
+}
+@keyframes illu-coche {
+  0%, 74% { opacity: 0; transform: scale(0); }
+  80% { opacity: 1; transform: scale(1.15); }
+  84%, 92% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* Moins d'animations demandé : l'état final, immobile. */
+@media (prefers-reduced-motion: reduce) {
+  .illu [class*='illu-'] {
+    animation: none !important;
+  }
+}
