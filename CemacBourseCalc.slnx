@@ -6,6 +6,7 @@
     <Project Path="src/CemacBourseCalc.Infrastructure/CemacBourseCalc.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CemacBourseCalc.Application.Tests/CemacBourseCalc.Application.Tests.csproj" />
     <Project Path="tests/CemacBourseCalc.Domain.Tests/CemacBourseCalc.Domain.Tests.csproj" />
   </Folder>
 </Solution>

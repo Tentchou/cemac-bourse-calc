@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using CemacBourseCalc.Api.Erreurs;
+using CemacBourseCalc.Api.Securite;
 using CemacBourseCalc.Application;
 using CemacBourseCalc.Infrastructure;
 
@@ -7,8 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddSecuriteAdmin();
 
-builder.Services.AddControllers();
+// Les énumérations circulent par leur nom (« Semestrielle », « Admin »), comme en base.
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GestionnaireErreurs>();
@@ -26,15 +31,34 @@ builder.Services.AddRateLimiter(options =>
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0
         }));
+
+    // En plus : peu d'essais de connexion par minute et par IP, contre la recherche de mots de passe.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(contexte =>
+        HttpMethods.IsPost(contexte.Request.Method)
+        && contexte.Request.Path.Equals($"{SecuriteAdmin.CheminAdmin}/session", StringComparison.OrdinalIgnoreCase)
+            ? RateLimitPartition.GetFixedWindowLimiter(
+                "connexion:" + (contexte.Connection.RemoteIpAddress?.ToString() ?? "inconnue"),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = builder.Configuration.GetValue("LimiteRequetes:ConnexionsParMinute", 5),
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0
+                })
+            : RateLimitPartition.GetNoLimiter("libre"));
 });
 
 const string PolitiqueFront = "front";
 builder.Services.AddCors(options => options.AddPolicy(PolitiqueFront, politique => politique
     .WithOrigins(builder.Configuration.GetSection("Front:Origines").Get<string[]>() ?? [])
     .AllowAnyHeader()
-    .AllowAnyMethod()));
+    .AllowAnyMethod()
+    .AllowCredentials()));
 
 var app = builder.Build();
+
+// Création d'un compte depuis le serveur (le premier compte en particulier) : voir le README.
+if (args is [CreationAdministrateurConsole.Commande, ..])
+    return await CreationAdministrateurConsole.ExecuterAsync(app.Services);
 
 app.UseExceptionHandler();
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
@@ -42,7 +66,11 @@ if (app.Environment.IsDevelopment()) app.MapOpenApi();
 app.UseHttpsRedirection();
 app.UseCors(PolitiqueFront);
 app.UseRateLimiter();
+app.UseMiddleware<ProtectionCsrf>();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers().RequireRateLimiting(PolitiquePublique);
 
 app.Run();
+return 0;

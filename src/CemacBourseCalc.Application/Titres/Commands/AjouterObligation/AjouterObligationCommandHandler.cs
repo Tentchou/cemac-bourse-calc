@@ -1,4 +1,7 @@
+using CemacBourseCalc.Application.Administration.Common;
+using CemacBourseCalc.Application.Administration.Interfaces;
 using CemacBourseCalc.Application.Common;
+using CemacBourseCalc.Application.Common.Interfaces;
 using CemacBourseCalc.Application.Titres.Interfaces;
 using CemacBourseCalc.Domain.Communs;
 using CemacBourseCalc.Domain.Titres;
@@ -6,11 +9,16 @@ using MediatR;
 
 namespace CemacBourseCalc.Application.Titres.Commands.AjouterObligation;
 
-public sealed class AjouterObligationCommandHandler(ITitresEcriture ecriture)
-    : IRequestHandler<AjouterObligationCommand, Result<Guid>>
+public sealed class AjouterObligationCommandHandler(
+    ITitresEcriture ecriture,
+    IAdministrateurCourant courant,
+    IJournalAdmin journal,
+    IUniteDeTravail uniteDeTravail) : IRequestHandler<AjouterObligationCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(AjouterObligationCommand c, CancellationToken cancellationToken)
     {
+        if (courant.Id is not { } auteur) return Result<Guid>.Echec(Journal.MessageSessionRequise);
+
         Obligation obligation;
         try
         {
@@ -30,7 +38,9 @@ public sealed class AjouterObligationCommandHandler(ITitresEcriture ecriture)
         if (await ecriture.IsinExisteAsync(obligation.Isin.Valeur, cancellationToken))
             return Result<Guid>.Echec($"Le titre {obligation.Isin} existe déjà.");
 
-        await ecriture.AjouterAsync(obligation, cancellationToken);
+        ecriture.Ajouter(obligation);
+        journal.Noter(auteur, Journal.Creation, Journal.EntiteTitre, obligation.Id.ToString(), apres: c);
+        await uniteDeTravail.EnregistrerAsync(cancellationToken);
         return Result<Guid>.Succes(obligation.Id, $"L'obligation {obligation.Nom} est enregistrée.");
     }
 }
