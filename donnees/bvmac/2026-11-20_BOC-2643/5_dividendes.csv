@@ -1,0 +1,8 @@
+ISIN;Exercice;Dividende brut;Dividende net;Date de détachement;Date de paiement;Source
+CM0000010009;2025;800;;;25/06/2026;p. 5 (montant, date), fiche p. 14 (brut unitaire 2025 : 800)
+CM0000010017;2025;2200;;;20/07/2026;p. 5, fiche p. 15 (brut unitaire : 2 200)
+CM0000010025;2025;2325;;;20/07/2026;p. 5, fiche p. 16 (brut unitaire 2025 : 2 325)
+CM0000010041;2023;993,334;894;;18/09/2024;fiche p. 17 (dividende versé 2023 : 993,334), p. 5 donne 894 (= 993,334 × 90 %, donc le net), 2024 non distribué
+GQ0000010050;2025;4830;;;31/07/2026;p. 5, fiche p. 18 (brut unitaire : 4 830)
+GA0000010066;2024;481,3;433,16;;22/10/2025;fiche p. 19 (brut unitaire 2024 : 481,3), p. 5 donne 433,16 (≈ 481,3 × 90 %, donc le net)
+GA0000010074;2025;2500;;;18/05/2026;p. 5, fiche p. 20 (brut unitaire 2025 : 2 500)
