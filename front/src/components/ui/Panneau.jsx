@@ -11,10 +11,10 @@ const FOCALISABLES = 'a[href], button:not([disabled]), input:not([disabled]), se
  * Échap ou un clic sur le voile le ferme, le focus revient ensuite à l'élément qui l'a ouvert.
  * La page derrière ne défile plus tant qu'il est ouvert.
  *
- * titre, aide : en-tête. pied : les boutons du bas (toujours visibles). occupe : bloque la fermeture
+ * large : 1000 px au lieu de 520 (un tableau à lire). titre, aide : en-tête. pied : les boutons du bas (toujours visibles). occupe : bloque la fermeture
  * pendant un enregistrement.
  */
-export default function Panneau({ ouvert, onFermer, titre, aide, pied, occupe = false, children }) {
+export default function Panneau({ ouvert, onFermer, titre, aide, pied, occupe = false, large = false, children }) {
   const { t } = usePreferences()
   const id = useId()
   const boite = useRef(null)
@@ -70,7 +70,9 @@ export default function Panneau({ ouvert, onFermer, titre, aide, pied, occupe = 
         aria-modal="true"
         aria-labelledby={`${id}-titre`}
         aria-describedby={aide ? `${id}-aide` : undefined}
-        className="panneau-entree absolute inset-y-0 right-0 flex w-full flex-col bg-surface shadow-haute sm:w-[min(520px,100%)] sm:border-l sm:border-bordure"
+        className={`panneau-entree absolute inset-y-0 right-0 flex w-full flex-col bg-surface shadow-haute sm:border-l sm:border-bordure ${
+          large ? 'sm:w-[min(1000px,100%)]' : 'sm:w-[min(520px,100%)]'
+        }`}
       >
         <header className="flex items-start gap-3 border-b border-bordure px-5 pt-5 pb-4">
           <div className="min-w-0 flex-1">

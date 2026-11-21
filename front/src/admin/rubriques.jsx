@@ -105,6 +105,7 @@ export const RUBRIQUES = [
     compteur: 'cours',
     recherche: 'admin.filtre.recherche.cours',
     seances: true,
+    bulletin: true,
     colonnes: (p) => [
       { cle: 'nom', titre: p.t('admin.col.titre'), rendu: cellTitre },
       {

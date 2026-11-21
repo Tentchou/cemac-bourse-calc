@@ -1,4 +1,4 @@
-import { CircleCheck, Plus, Search, Upload, X } from 'lucide-react'
+import { CircleCheck, FileText, Plus, Search, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { listerSeances } from '../../api/admin'
 import { MODELES } from '../../admin/import/modeles'
@@ -11,6 +11,7 @@ import { etatPage } from '../ui/pagination/paginer'
 import { SqueletteTableau } from '../ui/Squelettes'
 import Tableau from '../ui/Tableau'
 import FormulaireAjout from './FormulaireAjout'
+import ImportBulletin from './ImportBulletin'
 import ImportFichier from './ImportFichier'
 
 const CLASSE_FILTRE =
@@ -25,7 +26,7 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
   const { t } = p
   const route = MODELES[rubrique.modele].route
   const liste = useListeAdmin(route, { onSessionExpiree })
-  const [panneau, setPanneau] = useState(null) // null · ajouter · importer
+  const [panneau, setPanneau] = useState(null) // null · ajouter · importer · bulletin
   const [succes, setSucces] = useState(null)
   const [seances, setSeances] = useState([])
 
@@ -75,13 +76,19 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
             )}
           </p>
         </div>
-        <div className="flex gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
+        <div className="flex flex-wrap gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
           <Bouton taille="petite" icone={Upload} onClick={() => setPanneau('importer')}>
             {t('admin.importer')}
           </Bouton>
-          <Bouton taille="petite" variante="action" icone={Plus} onClick={() => setPanneau('ajouter')}>
+          {/* Sur la page des cours, l'import du bulletin est le geste de tous les jours : c'est l'action principale. */}
+          <Bouton taille="petite" variante={rubrique.bulletin ? 'secondaire' : 'action'} icone={Plus} onClick={() => setPanneau('ajouter')}>
             {t('admin.ajouter')}
           </Bouton>
+          {rubrique.bulletin && (
+            <Bouton taille="petite" variante="action" icone={FileText} onClick={() => setPanneau('bulletin')} className="max-sm:order-first max-sm:basis-full">
+              {t('admin.bulletin.bouton')}
+            </Bouton>
+          )}
         </div>
       </div>
 
@@ -178,6 +185,13 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
             setPanneau(null)
             apresEnregistrement(t('admin.cree'))
           }}
+          onSessionExpiree={onSessionExpiree}
+        />
+      )}
+      {panneau === 'bulletin' && (
+        <ImportBulletin
+          onFermer={() => setPanneau(null)}
+          onImporte={(texte) => apresEnregistrement(texte)}
           onSessionExpiree={onSessionExpiree}
         />
       )}

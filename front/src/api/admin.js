@@ -69,6 +69,24 @@ export const listerSeances = (signal) => appeler('cours/seances', { signal })
 export const creer = (route, commande) => appeler(route, { methode: 'POST', corps: commande })
 
 /**
+ * Lecture d'un bulletin de la cote (PDF) par l'API : l'aperçu, sans rien enregistrer.
+ * Le fichier part en multipart ; l'en-tête X-CBC-Admin est exigé comme pour toute écriture.
+ */
+export async function analyserBulletin(fichier) {
+  const corps = new FormData()
+  corps.append('fichier', fichier)
+  const reponse = await fetch('/api/admin/bulletins/analyse', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'X-CBC-Admin': '1' },
+    body: corps,
+  })
+  if (reponse.ok) return reponse.json()
+  const { message, details } = await lireErreur(reponse)
+  throw new ErreurApi(message, reponse.status, details)
+}
+
+/**
  * Envoi en masse, tout ou rien. Rend le bilan de l'API :
  * { message, bilan: { lignes, enregistrees, erreurs: [{ ligne, messages }] } }.
  * Une réponse 422 (des lignes à corriger, rien d'enregistré) est un bilan, pas une exception.

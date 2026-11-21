@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="fr" data-theme="clair">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEMAC Bourse Calc — maquette import du bulletin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ Charte (identique au site public) ============ */
+:root, [data-theme="clair"] {
+  --fond: #F7F5EF; --surface: #FFFFFF; --texte: #14213D; --texte-2: #4A5568;
+  --action: #1F5BD6; --sur-action: #FFFFFF; --marque: #2F6FED;
+  --orange: #F08A24; --orange-texte: #A9520B; --erreur: #B42318; --succes: #1A7F4B;
+  --bordure: #D8D3C7; --bordure-champ: #B9B3A5; --voile: rgba(20,33,61,.045);
+  --raye: rgba(20,33,61,.025); --ombre: 0 18px 50px rgba(20,33,61,.18);
+}
+[data-theme="sombre"] {
+  --fond: #14213D; --surface: #1F2E52; --texte: #F7F5EF; --texte-2: #BFD0EA;
+  --action: #7FA7F5; --sur-action: #14213D; --marque: #1F2E52;
+  --orange: #F08A24; --orange-texte: #F08A24; --erreur: #FF8A80; --succes: #4ADE80;
+  --bordure: #2E3F66; --bordure-champ: #4A5F8C; --voile: rgba(247,245,239,.05);
+  --raye: rgba(247,245,239,.03); --ombre: 0 18px 50px rgba(0,0,0,.45);
+}
+* { box-sizing: border-box; }
+html { font-family: 'Inter', system-ui, sans-serif; font-size: 16px; }
+body { margin: 0; background: var(--fond); color: var(--texte); line-height: 1.5; }
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; margin: 0; letter-spacing: -.01em; }
+p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+.chiffres { font-variant-numeric: tabular-nums; }
+.doux { color: var(--texte-2); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+
+/* ============ En-tête ============ */
+.entete { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--bordure); }
+.entete .ligne { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 16px; max-width: 1360px; margin: 0 auto; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; }
+.logo i { width: 30px; height: 30px; border-radius: 9px; background: var(--action); display: grid; place-items: center; color: var(--sur-action); font-style: normal; font-size: .75rem; }
+.etiquette-admin { font-size: .75rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--voile); color: var(--texte-2); border: 1px solid var(--bordure); }
+.reglages { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.bascule { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--voile); border: 1px solid var(--bordure); }
+.bascule button { border: 0; background: transparent; padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; color: var(--texte-2); cursor: pointer; }
+.bascule button[aria-pressed="true"] { background: var(--surface); color: var(--texte); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.compte { display: flex; align-items: center; gap: 8px; font-size: .875rem; }
+.avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--voile); border: 1px solid var(--bordure); display: grid; place-items: center; font-weight: 600; font-size: .75rem; }
+.logo span { white-space: nowrap; }
+@media (max-width: 640px) {
+  .compte .nom, .etiquette-admin { display: none; }
+  .entete .ligne { gap: 8px; }
+  .reglages { gap: 6px; }
+  .bascule button { padding: 4px 8px; }
+}
+@media (max-width: 420px) { .logo span, .compte { display: none; } }
+
+/* ============ Disposition : menu latéral + contenu ============ */
+.cadre { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 24px; max-width: 1360px; margin: 0 auto; padding: 24px 16px 48px; }
+.menu { position: sticky; top: 84px; align-self: start; display: flex; flex-direction: column; gap: 18px; }
+.menu h2 { font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; color: var(--texte-2); margin: 0 12px 6px; font-family: 'Inter', sans-serif; }
+.menu a { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; color: var(--texte-2); text-decoration: none; font-weight: 500; font-size: .9375rem; }
+.menu a:hover { background: var(--voile); color: var(--texte); }
+.menu a[aria-current="page"] { background: var(--surface); color: var(--texte); box-shadow: inset 3px 0 0 var(--action); border: 1px solid var(--bordure); }
+.menu a .nb { margin-left: auto; font-size: .75rem; color: var(--texte-2); }
+.menu svg { width: 18px; height: 18px; flex: none; }
+/* Mobile : le menu devient une bande de pilules qui défile, sous l'en-tête. */
+@media (max-width: 900px) {
+  .cadre { grid-template-columns: minmax(0,1fr); padding-top: 0; }
+  .menu { position: sticky; top: 60px; z-index: 15; flex-direction: row; gap: 6px; overflow-x: auto; margin: 0 -16px; padding: 10px 16px; background: var(--fond); border-bottom: 1px solid var(--bordure); scrollbar-width: none; }
+  .menu h2 { display: none; }
+  .menu .groupe { display: contents; }
+  .menu a { flex: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bordure); background: var(--surface); font-size: .875rem; }
+  .menu a[aria-current="page"] { background: var(--action); color: var(--sur-action); border-color: var(--action); box-shadow: none; }
+  .menu a[aria-current="page"] .nb { color: inherit; }
+  .menu svg { display: none; }
+}
+
+/* ============ En-tête de page ============ */
+.tete-page { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin: 8px 0 18px; }
+.tete-page h1 { font-size: 1.625rem; }
+.tete-page p { font-size: .875rem; margin-top: 4px; }
+.tete-page .actions { margin-left: auto; display: flex; gap: 8px; }
+@media (max-width: 640px) {
+  .tete-page h1 { font-size: 1.375rem; }
+  .tete-page .actions { margin-left: 0; width: 100%; }
+  .tete-page .actions .bouton { flex: 1; }
+}
+
+/* ============ Boutons (pilules, comme le site public) ============ */
+.bouton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; font-size: .875rem; font-weight: 500; border: 1px solid var(--bordure-champ); background: var(--surface); cursor: pointer; white-space: nowrap; }
+.bouton:hover { background: var(--voile); }
+.bouton.action { background: var(--action); color: var(--sur-action); border-color: var(--action); }
+.bouton.action:hover { filter: brightness(1.08); }
+.bouton.fantome { border-color: transparent; background: transparent; color: var(--texte-2); }
+.bouton svg { width: 18px; height: 18px; }
+
+/* ============ Barre de filtres ============ */
+.filtres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.recherche { position: relative; flex: 1 1 260px; }
+.recherche svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--texte-2); }
+.recherche input { width: 100%; height: 40px; padding: 0 14px 0 40px; border-radius: 999px; border: 1px solid var(--bordure-champ); background: var(--surface); }
+.choix { height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--bordure-champ); background: var(--surface); font-size: .875rem; }
+@media (max-width: 640px) { .filtres .choix { flex: 1 1 calc(50% - 4px); } }
+
+/* ============ Tableau (même forme que le public) ============ */
+.tableau { border: 1px solid var(--bordure); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.tableau .defile { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+th { height: 44px; padding: 0 16px; text-align: left; font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--texte-2); white-space: nowrap; border-bottom: 1px solid var(--bordure); }
+td { height: 56px; padding: 0 16px; white-space: nowrap; }
+tbody tr:nth-child(even) td { background: var(--raye); }
+tbody tr:hover td { background: var(--voile); }
+td.n, th.n { text-align: right; }
+.titre-cellule b { display: block; font-weight: 600; }
+.titre-cellule span { font-size: .75rem; color: var(--texte-2); }
+th:first-child, td:first-child { position: sticky; left: 0; background: var(--surface); }
+tbody tr:nth-child(even) td:first-child { background: linear-gradient(var(--raye), var(--raye)), var(--surface); }
+@media (max-width: 640px) { td:first-child { white-space: normal; min-width: 150px; max-width: 170px; } }
+.pastille { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; background: var(--voile); border: 1px solid var(--bordure); }
+.pastille.ok { color: var(--succes); }
+.pastille.ok::before { content: ''; width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
+.pastille.ecart { color: var(--orange-texte); }
+.pastille.ecart::before { content: ''; width: 6px; height: 6px; border-radius: 99px; background: var(--orange); }
+
+/* ============ Pagination (celle de l'accueil) ============ */
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 12px; font-size: .875rem; }
+.pagination .droite { display: flex; align-items: center; gap: 12px; }
+.pages { display: flex; gap: 4px; }
+.pages button { min-width: 40px; height: 40px; border-radius: 999px; border: 0; background: transparent; cursor: pointer; font-weight: 500; }
+.pages button:hover { background: var(--voile); }
+.pages button[aria-current="page"] { background: var(--action); color: var(--sur-action); }
+.mobile-seul { display: none; }
+@media (max-width: 640px) { .pages .num, .lignes { display: none; } .mobile-seul { display: inline; padding: 0 8px; } }
+
+/* ============ Panneau latéral (Ajouter / Importer) ============ */
+.voile { position: fixed; inset: 0; background: rgba(10,16,32,.45); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.panneau { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 100%); background: var(--surface); box-shadow: var(--ombre); transform: translateX(100%); transition: transform .25s cubic-bezier(.2,.8,.2,1); z-index: 50; display: flex; flex-direction: column; }
+.ouvert .voile { opacity: 1; pointer-events: auto; }
+.panneau.ouvert { transform: none; }
+.panneau header { display: flex; align-items: flex-start; gap: 12px; padding: 20px 20px 16px; border-bottom: 1px solid var(--bordure); }
+.panneau header h2 { font-size: 1.25rem; }
+.panneau header p { font-size: .8125rem; color: var(--texte-2); margin-top: 2px; }
+.panneau header .bouton { margin-left: auto; width: 40px; padding: 0; }
+.panneau .corps { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 22px; }
+.panneau footer { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--bordure); background: var(--surface); }
+@media (max-width: 640px) { .panneau { width: 100%; } .panneau footer .bouton { flex: 1; } }
+
+fieldset { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+legend { font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--texte-2); font-weight: 600; margin-bottom: 10px; }
+.champ { display: flex; flex-direction: column; gap: 6px; }
+.champ.large { grid-column: 1 / -1; }
+.champ label { font-size: .8125rem; font-weight: 600; }
+.champ label em { font-style: normal; color: var(--erreur); }
+.champ input, .champ select { height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--bordure-champ); background: var(--surface); }
+.champ small { font-size: .75rem; color: var(--texte-2); }
+.champ.erreur input { border-color: var(--erreur); }
+.champ.erreur small { color: var(--erreur); }
+@media (max-width: 480px) { fieldset { grid-template-columns: 1fr; } }
+
+/* Import : les étapes */
+.etape { display: grid; grid-template-columns: 28px 1fr; gap: 12px; }
+.etape .rond { width: 28px; height: 28px; border-radius: 99px; background: var(--voile); border: 1px solid var(--bordure); display: grid; place-items: center; font-size: .8125rem; font-weight: 600; }
+.etape.faite .rond { background: var(--action); color: var(--sur-action); border-color: var(--action); }
+.etape h3 { font-size: .9375rem; }
+.etape p { font-size: .8125rem; color: var(--texte-2); margin: 2px 0 8px; }
+.depot { border: 1.5px dashed var(--bordure-champ); border-radius: 16px; padding: 22px; text-align: center; font-size: .875rem; color: var(--texte-2); }
+.depot b { color: var(--texte); }
+.bilan { border: 1px solid var(--bordure); border-radius: 14px; overflow: hidden; font-size: .8125rem; }
+.bilan div { display: flex; justify-content: space-between; padding: 10px 14px; }
+.bilan div + div { border-top: 1px solid var(--bordure); }
+.bilan .ko { color: var(--erreur); font-weight: 600; }
+.note { font-size: .8125rem; color: var(--texte-2); padding: 10px 14px; border-radius: 12px; background: var(--voile); }
+
+/* ============ Annotations de la maquette ============ */
+.annotation { max-width: 1360px; margin: 0 auto; padding: 0 16px; }
+.annotation div { margin-top: 16px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--orange); font-size: .8125rem; }
+</style>
+<style>
+.panneau.large { width: min(980px, 100%); }
+.panneau .corps > * { min-width: 0; max-width: 100%; }
+.entete-bulletin { flex-wrap: wrap; }
+@media (max-width: 640px) { .tete-page .actions { flex-wrap: wrap; } .tete-page .actions .action { flex-basis: 100%; order: -1; } }
+.resume { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+.resume div { border: 1px solid var(--bordure); border-radius: 14px; padding: 12px 14px; }
+.resume span { display: block; font-size: .75rem; color: var(--texte-2); }
+.resume b { font-size: 1.375rem; font-family: 'Plus Jakarta Sans', sans-serif; }
+.resume .ok b { color: var(--action); }
+.resume .att b { color: var(--orange-texte); }
+@media (max-width: 640px) { .resume { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.entete-bulletin { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 14px; background: var(--voile); border: 1px solid var(--bordure); }
+.entete-bulletin .icone { width: 40px; height: 40px; border-radius: 12px; background: var(--surface); border: 1px solid var(--bordure); display: grid; place-items: center; flex: none; }
+.entete-bulletin b { display: block; }
+.entete-bulletin span { font-size: .8125rem; color: var(--texte-2); }
+.onglets { display: flex; gap: 6px; flex-wrap: wrap; }
+.onglets button { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bordure); background: var(--surface); font-size: .8125rem; cursor: pointer; }
+.onglets button[aria-pressed="true"] { background: var(--action); color: var(--sur-action); border-color: var(--action); }
+.alerte { padding: 12px 14px; border-radius: 14px; font-size: .8125rem; border: 1px solid; }
+.alerte.ko { border-color: color-mix(in srgb, var(--erreur) 35%, transparent); background: color-mix(in srgb, var(--erreur) 7%, transparent); }
+.alerte.att { border-color: color-mix(in srgb, var(--orange) 45%, transparent); background: color-mix(in srgb, var(--orange) 9%, transparent); }
+.alerte b { display: block; margin-bottom: 2px; }
+.ko-texte { color: var(--erreur); }
+.pastille.inconnu { color: var(--erreur); }
+.pastille.inconnu::before { content: ''; width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
+.pastille.action-t { color: var(--orange-texte); }
+</style>
+</head>
+<body class="ouvert">
+<header class="entete"><div class="ligne">
+  <span class="logo"><i>CB</i> <span>CEMAC Bourse Calc</span></span>
+  <span class="etiquette-admin">Administration</span>
+  <div class="reglages">
+    <div class="bascule" role="group" aria-label="Thème">
+      <button type="button" data-theme-choix="clair" aria-pressed="true">☀</button>
+      <button type="button" data-theme-choix="sombre" aria-pressed="false">☾</button>
+    </div>
+  </div>
+</div></header>
+
+<div class="cadre">
+  <nav class="menu" aria-label="Sections">
+    <div class="groupe"><h2>Titres</h2><a href="#">Obligations<span class="nb">33</span></a><a href="#">Actions<span class="nb">7</span></a></div>
+    <div class="groupe"><h2>Marché</h2><a href="#" aria-current="page">Cours<span class="nb">40</span></a><a href="#">Dividendes<span class="nb">7</span></a></div>
+    <div class="groupe"><h2>Référentiel</h2><a href="#">Émetteurs<span class="nb">14</span></a><a href="#">Jours non ouvrés<span class="nb">0</span></a></div>
+  </nav>
+  <main>
+    <div class="tete-page">
+      <div><h1>Cours</h1><p class="doux">Les cours d’une séance, tels que publiés au bulletin de la cote · 40 lignes</p></div>
+      <div class="actions">
+        <button class="bouton" type="button">Importer un fichier</button>
+        <button class="bouton" type="button">Ajouter</button>
+        <button class="bouton action" type="button" data-ouvrir="bulletin">Importer le bulletin (PDF)</button>
+      </div>
+    </div>
+    <p class="doux" style="font-size:.875rem">(La liste des cours reste celle de l’étape 2. Cliquez sur « Importer le bulletin (PDF) » pour rouvrir le panneau.)</p>
+  </main>
+</div>
+
+<div class="annotation"><div>
+  <b>Notes de maquette</b><br>
+  • Page <b>Cours</b> : un bouton de plus, « Importer le bulletin (PDF) », l’action principale de la page (c’est le geste de tous les jours).<br>
+  • Le PDF est lu <b>par l’API</b> : le même code servira au téléchargement automatique plus tard. Rien n’est enregistré avant « Enregistrer ».<br>
+  • Lu dans le PDF : numéro et date du bulletin ; pour chaque titre, le cours de clôture, le volume transigé et, pour les obligations, le coupon couru publié.<br>
+  • L’enregistrement passe par le même import en masse que le fichier CSV : tout ou rien, mêmes contrôles.<br>
+  • Les deux cas à trancher sont montrés en rouge (titre inconnu) et en orange (écart).
+</div></div>
+
+<div class="voile" data-fermer></div>
+<aside class="panneau large ouvert" id="bulletin" role="dialog" aria-modal="true" aria-labelledby="titre-bulletin">
+  <header>
+    <div><h2 id="titre-bulletin">Importer le bulletin de la cote</h2><p>Le PDF publié par la BVMAC. Rien n’est enregistré avant votre validation.</p></div>
+    <button class="bouton" type="button" data-fermer aria-label="Fermer" style="width:40px;padding:0">✕</button>
+  </header>
+  <div class="corps">
+    <div class="entete-bulletin">
+      <span class="icone">📄</span>
+      <div style="min-width:0;flex:1"><b>Bulletin officiel de la cote n° 2643 du 20/11/2026</b><span>BOC-20261120.pdf · 27 pages · séance du 20/11/2026 · règlement le 25/11/2026</span></div>
+      <button class="bouton" type="button" style="height:34px">Changer</button>
+    </div>
+
+    <div class="resume chiffres">
+      <div><span>Cours lus</span><b>41</b></div>
+      <div class="ok"><span>Coupons courus identiques</span><b>32 / 33</b></div>
+      <div class="att"><span>Écarts de coupon couru</span><b>1</b></div>
+      <div><span>Titres inconnus</span><b class="ko-texte">1</b></div>
+    </div>
+
+    <div class="alerte ko"><b>1 titre du bulletin n’est pas dans la base : EOG 6,25% NET 2027-2031 (GA0000020677)</b>Créez-le d’abord dans Obligations, puis rechargez le bulletin.</div>
+    <div class="alerte att"><b>1 écart entre le coupon couru publié et notre calcul</b>À vérifier (saisie du titre ou calcul). Il n’empêche pas l’enregistrement : la valeur publiée est gardée.</div>
+
+    <div class="onglets" role="group" aria-label="Afficher">
+      <button type="button" aria-pressed="true">Tout (41)</button>
+      <button type="button" aria-pressed="false">Écarts (1)</button>
+      <button type="button" aria-pressed="false">Inconnus (1)</button>
+      <button type="button" aria-pressed="false">Avec transactions (5)</button>
+    </div>
+
+    <div class="tableau"><div class="defile">
+      <table class="chiffres">
+        <thead><tr><th>Titre</th><th>Type</th><th class="n">Clôture</th><th class="n">Volume</th><th class="n">Coupon couru publié</th><th>Contrôle</th></tr></thead>
+        <tbody>
+          <tr><td class="titre-cellule"><b>ECMR 6,25% NET 2022-2029</b><span>CM0000020305</span></td><td><span class="pastille">Obligation</span></td><td class="n">100,00 %</td><td class="n">0</td><td class="n">186,99 FCFA</td><td><span class="pastille ok">Identique BVMAC</span></td></tr>
+          <tr><td class="titre-cellule"><b>ECMR 7,25% NET 2023-2031</b><span>CM0000020388</span></td><td><span class="pastille">Obligation</span></td><td class="n">99,00 %</td><td class="n">0</td><td class="n">307,88 FCFA</td><td><span class="pastille ok">Identique BVMAC</span></td></tr>
+          <tr><td class="titre-cellule"><b>EOG 7,5% NET 2024-2031</b><span>GA0000020503</span></td><td><span class="pastille">Obligation</span></td><td class="n">100,00 %</td><td class="n">0</td><td class="n">495,21 FCFA</td><td><span class="pastille ecart">Écart +0,01</span></td></tr>
+          <tr><td class="titre-cellule"><b>EOG 6,25% NET 2027-2031</b><span>GA0000020677</span></td><td><span class="pastille">Obligation</span></td><td class="n">100,00 %</td><td class="n">0</td><td class="n">12,33 FCFA</td><td><span class="pastille inconnu">Titre inconnu</span></td></tr>
+          <tr><td class="titre-cellule"><b>SAFACAM</b><span>CM0000010017</span></td><td><span class="pastille action-t">Action</span></td><td class="n">38 500 FCFA</td><td class="n">11</td><td class="n">—</td><td>—</td></tr>
+          <tr><td class="titre-cellule"><b>SOCAPALM</b><span>CM0000010025</span></td><td><span class="pastille action-t">Action</span></td><td class="n">49 000 FCFA</td><td class="n">60</td><td class="n">—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <p class="doux" style="font-size:.8125rem">Le titre inconnu et l’écart sont inventés pour la maquette : le vrai bulletin 2643 donne 40 titres connus et 33 coupons courus identiques.</p>
+  </div>
+  <footer>
+    <button class="bouton" type="button" data-fermer>Annuler</button>
+    <button class="bouton action" type="button" disabled style="opacity:.5">Enregistrer les 40 cours</button>
+  </footer>
+</aside>
+<script>
+document.querySelectorAll('[data-theme-choix]').forEach((b) => b.addEventListener('click', () => {
+  document.documentElement.dataset.theme = b.dataset.themeChoix
+  document.querySelectorAll('[data-theme-choix]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+}))
+const fermer = () => { document.body.classList.remove('ouvert'); document.querySelectorAll('.panneau').forEach((p) => p.classList.remove('ouvert')) }
+document.querySelectorAll('[data-ouvrir]').forEach((b) => b.addEventListener('click', () => { document.body.classList.add('ouvert'); document.getElementById(b.dataset.ouvrir).classList.add('ouvert') }))
+document.querySelectorAll('[data-fermer]').forEach((b) => b.addEventListener('click', fermer))
+</script>
+</body>
+</html>
