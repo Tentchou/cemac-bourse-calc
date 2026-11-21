@@ -1,16 +1,20 @@
-# React + Vite
+# CEMAC Bourse Calc — front
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Site public et administration, en React 19 (JSX), Vite et Tailwind CSS 4.
+Présentation du projet, installation et architecture : voir le [README principal](../README.md).
 
-Currently, two official plugins are available:
+```bash
+npm install
+npm run dev          # http://localhost:5173, /api relayé vers l'API locale
+npm run dev:exemple  # sans API ni base, avec des données d'exemple
+npm test             # tests (node --test)
+npm run lint         # oxlint
+npm run build        # dist/
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Dossier | Contenu |
+|---|---|
+| `src/pages/public` | Accueil, fiche d'un titre, méthodes |
+| `src/pages/admin`, `src/components/admin`, `src/admin` | Administration (chargée à part, sous `/admin`) |
+| `src/components/ui` | Composants de la charte : boutons, champs, tableau, pagination, panneau… |
+| `src/i18n` | Textes français et anglais, formats des nombres et des dates |
