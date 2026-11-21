@@ -46,6 +46,10 @@ public static class DependencyInjection
         services.AddScoped<ITitresEcriture, TitresEcriture>();
         services.AddScoped<ITitresLecture, TitresLecture>();
         services.AddScoped<ILectureCalculs, LectureCalculs>();
+        services.AddScoped<ITitresAdminLecture, TitresAdminLecture>();
+        services.AddScoped<IMarcheAdminLecture, MarcheAdminLecture>();
+        services.AddScoped<IJoursNonOuvresLecture, JoursNonOuvresLecture>();
+        services.AddScoped<ICompteursLecture, CompteursLecture>();
         return services;
     }
 }

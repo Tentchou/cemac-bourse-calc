@@ -40,7 +40,11 @@ function themeInitial() {
 
 const Contexte = createContext(null)
 
-export function PreferencesProvider({ children }) {
+/**
+ * textes : dictionnaires propres à un module chargé à part ({ fr, en }), ajoutés à ceux du site
+ * (l'administration apporte les siens sans alourdir le site public).
+ */
+export function PreferencesProvider({ children, textes }) {
   const [langue, setLangue] = useState(langueInitiale)
   const [theme, setTheme] = useState(themeInitial)
 
@@ -55,10 +59,11 @@ export function PreferencesProvider({ children }) {
     ecrire(CLE_THEME, theme)
   }, [theme])
 
-  const t = useCallback(
-    (cle, valeurs) => format.remplir(DICTIONNAIRES[langue][cle] ?? cle, valeurs),
-    [langue],
+  const dictionnaire = useMemo(
+    () => (textes ? { ...DICTIONNAIRES[langue], ...textes.fr, ...(langue === 'en' ? textes.en : {}) } : DICTIONNAIRES[langue]),
+    [langue, textes],
   )
+  const t = useCallback((cle, valeurs) => format.remplir(dictionnaire[cle] ?? cle, valeurs), [dictionnaire])
 
   const valeur = useMemo(
     () => ({

@@ -170,6 +170,33 @@
   animation-delay: calc(var(--rang, 0) * 40ms);
 }
 
+/* ---------- Panneau latéral : glisse depuis la droite, le voile s'assombrit. ---------- */
+@keyframes cbc-glisser {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes cbc-fondu {
+  from {
+    opacity: 0;
+  }
+}
+@utility panneau-entree {
+  animation: cbc-glisser 250ms var(--ease-douce) both;
+}
+@utility voile-entree {
+  animation: cbc-fondu 200ms var(--ease-douce) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panneau-entree,
+  .voile-entree {
+    animation: none;
+  }
+}
+
 /* ---------- Dépliage animé sans JavaScript (« Comment c'est calculé », menu mobile). ---------- */
 @utility depliable {
   display: grid;

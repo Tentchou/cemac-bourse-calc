@@ -24,5 +24,6 @@ public sealed class CoursConfiguration : IEntityTypeConfiguration<Cours>
 
         b.HasOne<Titre>().WithMany().HasForeignKey(c => c.TitreId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(c => new { c.TitreId, c.DateSeance }).IsUnique(); // une ligne par titre et par séance
+        b.HasIndex(c => c.DateSeance); // liste d'une séance, dernière séance, liste des séances (administration)
     }
 }

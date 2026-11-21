@@ -12,34 +12,61 @@ export class ErreurApi extends Error {
 }
 
 async function messageErreur(reponse) {
-  if (reponse.status === 429) return 'Trop de requêtes : réessayez dans une minute.'
-  if (reponse.status === 401) return 'Votre session a expiré : reconnectez-vous.'
-  if (reponse.status === 403) return 'Votre compte n’a pas le droit de faire cette action.'
+  return (await lireErreur(reponse)).message
+}
+
+/** Le message de l'API, et ses erreurs par champ (« TauxFacial » → [« … »]) quand elle en donne. */
+async function lireErreur(reponse) {
+  if (reponse.status === 429) return { message: 'Trop de requêtes : réessayez dans une minute.' }
+  if (reponse.status === 401) return { message: 'Votre session a expiré : reconnectez-vous.' }
+  if (reponse.status === 403) return { message: 'Votre compte n’a pas le droit de faire cette action.' }
   try {
     const probleme = await reponse.json()
     const champs = probleme.errors ? Object.values(probleme.errors).flat() : []
-    return [probleme.title, ...champs].filter(Boolean).join(' ') || 'La demande a échoué.'
+    return {
+      message: [probleme.title, ...champs].filter(Boolean).join(' ') || 'La demande a échoué.',
+      details: probleme.errors ?? null,
+    }
   } catch {
-    return 'Le service est indisponible pour le moment.'
+    return { message: 'Le service est indisponible pour le moment.' }
   }
 }
 
-async function appeler(chemin, { methode = 'GET', corps } = {}) {
+async function appeler(chemin, { methode = 'GET', corps, signal } = {}) {
   const reponse = await fetch(`/api/admin/${chemin}`, {
     method: methode,
     credentials: 'same-origin',
     headers: methode === 'GET' ? undefined : EN_TETES,
     body: corps === undefined ? undefined : JSON.stringify(corps),
+    signal,
   })
   if (reponse.status === 204) return null
   if (reponse.ok) return reponse.json()
-  throw new ErreurApi(await messageErreur(reponse), reponse.status)
+  const { message, details } = await lireErreur(reponse)
+  throw new ErreurApi(message, reponse.status, details)
+}
+
+/** Les paramètres d'une liste en adresse : les valeurs vides ne sont pas envoyées. */
+export function parametresListe(parametres) {
+  const recherche = new URLSearchParams()
+  for (const [cle, valeur] of Object.entries(parametres)) {
+    if (valeur !== null && valeur !== undefined && String(valeur).trim() !== '') recherche.set(cle, String(valeur).trim())
+  }
+  return recherche.toString()
 }
 
 export const ouvrirSession = (email, motDePasse) => appeler('session', { methode: 'POST', corps: { email, motDePasse } })
 export const fermerSession = () => appeler('session', { methode: 'DELETE' })
 export const sessionCourante = () => appeler('session')
-export const listerEmetteurs = () => appeler('emetteurs')
+export const listerEmetteurs = () => appeler('emetteurs/choix')
+
+/** Une page d'une rubrique : { lignes, total, page, taille }. */
+export const listerPage = (route, parametres, signal) => appeler(`${route}?${parametresListe(parametres)}`, { signal })
+export const lireCompteurs = (signal) => appeler('compteurs', { signal })
+export const listerSeances = (signal) => appeler('cours/seances', { signal })
+
+/** Création d'une ligne : { id, message }. Une saisie refusée lève une ErreurApi avec ses erreurs par champ. */
+export const creer = (route, commande) => appeler(route, { methode: 'POST', corps: commande })
 
 /**
  * Envoi en masse, tout ou rien. Rend le bilan de l'API :

@@ -1,19 +1,18 @@
-import './admin.css'
+import { PreferencesProvider } from '../../contexte/Preferences'
+import { enAdmin, frAdmin } from '../../i18n/textesAdmin'
+import { RouteurProvider } from '../../routeur/Routeur'
 import Administration from './Administration'
 
-// L'administration garde son ancienne présentation tant que sa charte n'est pas validée
-// (la partie publique d'abord). Elle est chargée à part : son CSS ne touche pas le site public.
+// L'administration est chargée à part (sous /admin) : ses textes et ses écrans n'alourdissent pas le site public.
+// Elle reprend la charte, la langue et le thème du site.
+const TEXTES = { fr: frAdmin, en: enAdmin }
+
 export default function EspaceAdmin() {
   return (
-    <main className="page">
-      <header>
-        <h1>CEMAC Bourse Calc</h1>
-        <p className="sous-titre">Administration : saisie des titres et des données de marché.</p>
-      </header>
-      <p className="avertissement" role="note">
-        Outil éducatif, pas un conseil en investissement.
-      </p>
-      <Administration />
-    </main>
+    <PreferencesProvider textes={TEXTES}>
+      <RouteurProvider>
+        <Administration />
+      </RouteurProvider>
+    </PreferencesProvider>
   )
 }

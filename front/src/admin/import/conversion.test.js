@@ -111,3 +111,25 @@ describe('Excel (.xlsx)', () => {
     }])
   })
 })
+
+test('formulaire : même lecture qu’une ligne de fichier, erreurs par champ', async () => {
+  const { lireLigne, preparerReferences } = await import('./conversion.js')
+  const { MODELES } = await import('./modeles.js')
+  const refs = preparerReferences([], [{ id: 'e-1', nom: 'État du Cameroun', sigle: 'ECMR' }])
+  const saisie = {
+    isin: 'CM0000020305', nom: 'ECMR 6,25% NET 2022-2029', emetteurId: 'e-1', nominal: '10 000', tauxFacial: '6,25',
+    periodicite: 'Annuelle', dateJouissance: '2022-05-27', dateEcheance: '27/05/2029', modeRemboursement: 'AmortissementConstant',
+    differeEcheances: '', codeConvention: 'EXACT_365', regimeFiscal: 'Net',
+  }
+  const { commande, erreurs } = lireLigne(MODELES.obligations, (c) => saisie[c], refs)
+  assert.deepEqual(erreurs, [])
+  assert.equal(commande.emetteurId, 'e-1')
+  assert.equal(commande.nominal, 10000)
+  assert.equal(commande.tauxFacial, 6.25)
+  assert.equal(commande.dateEcheance, '2029-05-27')
+  assert.equal(commande.differeEcheances, 0)
+  assert.equal(commande.datePremierCoupon, null)
+
+  const faux = lireLigne(MODELES.obligations, (c) => ({ ...saisie, tauxFacial: 'six', emetteurId: 'inconnu', nom: '' })[c], refs)
+  assert.deepEqual(faux.erreurs.map((e) => e.champ).sort(), ['emetteurId', 'nom', 'tauxFacial'])
+})

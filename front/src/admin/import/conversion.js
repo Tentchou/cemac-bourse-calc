@@ -15,7 +15,9 @@ export function preparerReferences(titres, emetteurs) {
     emetteursParNom.set(normaliser(e.nom), e.id)
     if (e.sigle) emetteursParNom.set(normaliser(e.sigle), e.id)
   }
-  return { titresParIsin, emetteursParNom }
+  // Le formulaire de saisie choisit l'émetteur dans une liste : il donne directement son identifiant.
+  const emetteursIds = new Set(emetteurs.map((e) => e.id))
+  return { titresParIsin, emetteursParNom, emetteursIds }
 }
 
 function lireCellule(colonne, cellule, references) {
@@ -26,6 +28,7 @@ function lireCellule(colonne, cellule, references) {
     case 'date': return lireDate(cellule)
     case 'choix': return lireChoix(cellule, colonne.choix)
     case 'emetteur': {
+      if (references.emetteursIds?.has(String(cellule))) return { valeur: String(cellule) }
       const id = references.emetteursParNom.get(normaliser(cellule))
       return id ? { valeur: id } : { erreur: `l'émetteur « ${String(cellule).trim()} » n'existe pas : saisissez-le d'abord` }
     }
@@ -35,6 +38,29 @@ function lireCellule(colonne, cellule, references) {
     }
     default: throw new Error(`Type de colonne inconnu : ${colonne.type}`)
   }
+}
+
+/**
+ * Une ligne, lue champ par champ : la même règle pour une ligne de fichier et pour le formulaire de saisie.
+ * @param {object} modele un modèle de modeles.js
+ * @param {(champ: string) => unknown} cellule la valeur saisie pour un champ (vide : null, '' ou absent)
+ * @returns {{ commande: object, erreurs: {champ: string, entete: string, message: string}[] }}
+ */
+export function lireLigne(modele, cellule, references) {
+  const commande = {}
+  const erreurs = []
+  for (const colonne of modele.colonnes) {
+    const valeur = cellule(colonne.champ)
+    if (estVide(valeur)) {
+      if (colonne.obligatoire) erreurs.push({ champ: colonne.champ, entete: colonne.entete, message: 'obligatoire' })
+      commande[colonne.champ] = colonne.defaut ?? null
+      continue
+    }
+    const lu = lireCellule(colonne, valeur, references)
+    if (lu.erreur) erreurs.push({ champ: colonne.champ, entete: colonne.entete, message: lu.erreur })
+    else commande[colonne.champ] = lu.valeur
+  }
+  return { commande, erreurs }
 }
 
 /**
@@ -76,24 +102,12 @@ export function convertir(modele, tableau, references) {
     const numero = index + 2
     if (!ligne || ligne.every(estVide)) return // ligne blanche : ignorée
 
-    const commande = {}
-    const messages = []
-    for (const colonne of modele.colonnes) {
-      const position = positions.get(colonne.champ)
-      const cellule = position === undefined ? null : ligne[position]
+    const { commande, erreurs: erreursLigne } = lireLigne(modele, (champ) => {
+      const position = positions.get(champ)
+      return position === undefined ? null : ligne[position]
+    }, references)
 
-      if (estVide(cellule)) {
-        if (colonne.obligatoire) messages.push(`${colonne.entete} : obligatoire`)
-        commande[colonne.champ] = colonne.defaut ?? null
-        continue
-      }
-
-      const lu = lireCellule(colonne, cellule, references)
-      if (lu.erreur) messages.push(`${colonne.entete} : ${lu.erreur}`)
-      else commande[colonne.champ] = lu.valeur
-    }
-
-    if (messages.length) erreurs.push({ ligne: numero, messages })
+    if (erreursLigne.length) erreurs.push({ ligne: numero, messages: erreursLigne.map((e) => `${e.entete} : ${e.message}`) })
     else {
       commandes.push(commande)
       lignesFichier.push(numero)

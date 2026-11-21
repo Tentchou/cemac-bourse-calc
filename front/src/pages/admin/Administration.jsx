@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { fermerSession, sessionCourante } from '../../api/admin'
+import CadreAdmin from '../../components/admin/CadreAdmin'
+import { usePreferences } from '../../contexte/Preferences'
 import Connexion from './Connexion'
-import ImportMasse from './ImportMasse'
 
-/** L'espace d'administration : la connexion d'abord, puis l'import. La session est vérifiée par l'API. */
+/** L'espace d'administration : la connexion d'abord, puis les rubriques. La session est vérifiée par l'API. */
 export default function Administration() {
+  const { t } = usePreferences()
   const [compte, setCompte] = useState(undefined) // undefined : vérification en cours ; null : non connecté
 
-  function verifier() {
-    sessionCourante().then(setCompte).catch(() => setCompte(null))
-  }
+  const verifier = useCallback(() => {
+    sessionCourante()
+      .then(setCompte)
+      .catch(() => setCompte(null))
+  }, [])
 
-  useEffect(verifier, [])
+  useEffect(verifier, [verifier])
+
+  const sessionExpiree = useCallback(() => setCompte(null), [])
 
   async function deconnecter() {
     try {
@@ -21,16 +27,13 @@ export default function Administration() {
     }
   }
 
-  if (compte === undefined) return <p role="status">Vérification de la session…</p>
+  if (compte === undefined)
+    return (
+      <p role="status" className="grid min-h-dvh place-items-center bg-fond text-sm text-texte-2">
+        {t('admin.verification')}
+      </p>
+    )
   if (compte === null) return <Connexion onConnecte={verifier} />
 
-  return (
-    <>
-      <div className="barre-compte">
-        <span>{compte.nom} · {compte.role}</span>
-        <button type="button" className="bouton" onClick={deconnecter}>Se déconnecter</button>
-      </div>
-      <ImportMasse onSessionExpiree={() => setCompte(null)} />
-    </>
-  )
+  return <CadreAdmin compte={compte} onDeconnecter={deconnecter} onSessionExpiree={sessionExpiree} />
 }

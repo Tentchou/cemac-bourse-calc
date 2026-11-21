@@ -386,6 +386,9 @@ namespace CemacBourseCalc.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_cours");
 
+                    b.HasIndex("DateSeance")
+                        .HasDatabaseName("ix_cours_date_seance");
+
                     b.HasIndex("TitreId", "DateSeance")
                         .IsUnique()
                         .HasDatabaseName("ix_cours_titre_id_date_seance");
