@@ -81,10 +81,44 @@ const dividende = {
   dividendeBrut: 1500, dividendeNet: 1260, rendementBrut: 4.6875, rendementNet: 3.9375,
 }
 
+// Historique d'exemple : deux ans de séances (du lundi au vendredi) jusqu'au dernier cours du titre,
+// tirées d'un générateur à graine fixe (les mêmes courbes à chaque lancement). Beaucoup de séances
+// sans échange, cours alors inchangé : c'est le cas de la plupart des titres de la BVMAC.
+function historiqueExemple(titre, graine) {
+  let etat = graine
+  const hasard = () => ((etat = (etat * 1664525 + 1013904223) % 4294967296) / 4294967296)
+  const obligation = titre.typeTitre === 'Obligation'
+  const dates = []
+  const jour = new Date(`${titre.dateDernierCours}T00:00:00Z`)
+  while (dates.length < 520) {
+    const j = jour.getUTCDay()
+    if (j !== 0 && j !== 6) dates.unshift(jour.toISOString().slice(0, 10))
+    jour.setUTCDate(jour.getUTCDate() - 1)
+  }
+  // On remonte le temps depuis le dernier cours : la courbe finit exactement sur la valeur de la fiche.
+  const cours = new Array(dates.length)
+  const volumes = new Array(dates.length)
+  let c = titre.dernierCours
+  for (let i = dates.length - 1; i >= 0; i -= 1) {
+    cours[i] = c
+    const echange = hasard() < (obligation ? 0.3 : 0.55)
+    volumes[i] = echange ? Math.round((obligation ? 20 : 5) + hasard() * (obligation ? 900 : 300)) : 0
+    if (echange) {
+      const pas = obligation ? (hasard() - 0.5) * 0.6 : Math.round(((hasard() - 0.48) * 900) / 5) * 5
+      c = obligation ? Math.round(Math.min(Math.max(c - pas, 94), 104) * 100) / 100 : Math.max(c - pas, 1000)
+    }
+  }
+  return dates.map((dateSeance, i) => ({ dateSeance, cours: cours[i], volume: volumes[i] }))
+}
+
+const historiques = Object.fromEntries(titres.map((titre, i) => [titre.id, historiqueExemple(titre, 7919 * (i + 1))]))
+
 function repondre(chemin) {
   if (chemin === '/api/titres') return titres
   const fiche = /^\/api\/titres\/([0-9a-f-]{36})$/.exec(chemin)
   if (fiche) return fiches[fiche[1]] ?? null
+  const historique = /^\/api\/titres\/([0-9a-f-]{36})\/cours$/.exec(chemin)
+  if (historique) return historiques[historique[1]] ?? null
   if (/^\/api\/obligations\/[0-9a-f-]{36}\/coupon-couru$/.test(chemin)) return couponCouru
   if (/^\/api\/obligations\/[0-9a-f-]{36}\/rendement$/.test(chemin)) return rendement
   if (/^\/api\/obligations\/[0-9a-f-]{36}\/echeancier$/.test(chemin)) return echeancier

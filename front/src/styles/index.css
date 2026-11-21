@@ -299,6 +299,20 @@
   animation-delay: calc(var(--rang, 0) * 60ms);
 }
 
+/* Courbe des cours : elle se trace de gauche à droite (pathLength="1" sur le chemin). */
+@keyframes cbc-tracer {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@utility trace {
+  stroke-dasharray: 1;
+  animation: cbc-tracer 700ms var(--ease-douce) both;
+}
+
 /* Barre de composition (prix pied de coupon + coupon couru) : elle s'étire à l'apparition. */
 @keyframes cbc-etirer {
   from {

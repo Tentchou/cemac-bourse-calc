@@ -1,6 +1,7 @@
 using CemacBourseCalc.Application.Titres.Dtos;
 using CemacBourseCalc.Application.Titres.Queries.ListerTitres;
 using CemacBourseCalc.Application.Titres.Queries.ObtenirFicheTitre;
+using CemacBourseCalc.Application.Titres.Queries.ObtenirHistoriqueCours;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,5 +22,14 @@ public sealed class TitresController(ISender mediator) : ControllerBase
     public async Task<ActionResult<FicheTitreDto>> Fiche(Guid id, CancellationToken ct) =>
         await mediator.Send(new ObtenirFicheTitreQuery(id), ct) is { } fiche
             ? Ok(fiche)
+            : Problem(title: "Ce titre est introuvable.", statusCode: StatusCodes.Status404NotFound);
+
+    /// <summary>
+    /// GET api/titres/{id}/cours : l'historique des cours (environ cinq ans de séances), du plus ancien au plus récent.
+    /// </summary>
+    [HttpGet("{id:guid}/cours")]
+    public async Task<ActionResult<IReadOnlyList<PointCoursDto>>> Historique(Guid id, CancellationToken ct) =>
+        await mediator.Send(new ObtenirHistoriqueCoursQuery(id), ct) is { } points
+            ? Ok(points)
             : Problem(title: "Ce titre est introuvable.", statusCode: StatusCodes.Status404NotFound);
 }

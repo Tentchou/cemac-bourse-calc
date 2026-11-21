@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IJoursNonOuvresEcriture, JoursNonOuvresEcriture>();
         services.AddScoped<ITitresEcriture, TitresEcriture>();
         services.AddScoped<ITitresLecture, TitresLecture>();
+        services.AddScoped<IHistoriqueCoursLecture, HistoriqueCoursLecture>();
         services.AddScoped<ILectureCalculs, LectureCalculs>();
         services.AddScoped<ITitresAdminLecture, TitresAdminLecture>();
         services.AddScoped<IMarcheAdminLecture, MarcheAdminLecture>();

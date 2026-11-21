@@ -5,7 +5,7 @@
 //     http/intercepteurs.js    langue, suivi du chargement, 1 nouvel essai pour une lecture en panne passagère
 //     http/ErreurApi.js        une seule forme d'erreur (type, statut, clé de texte ou message de l'API)
 //     http/suiviChargement.js  nombre de requêtes en cours (barre de progression)
-//     titresService.js         liste et fiche des titres
+//     titresService.js         liste, fiche et historique des cours des titres
 //     calculsService.js        coupon couru, rendements, échéancier, dividende
 //     useRequete.js            état d'une requête dans un écran (chargement, erreur, recharger, annulation)
 

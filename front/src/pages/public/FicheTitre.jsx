@@ -5,6 +5,7 @@ import CalculateurDividende from '../../components/titres/CalculateurDividende'
 import CalculateurObligation from '../../components/titres/CalculateurObligation'
 import Caracteristiques from '../../components/titres/Caracteristiques'
 import EnTeteFiche from '../../components/titres/EnTeteFiche'
+import HistoriqueCours from '../../components/titres/historique/HistoriqueCours'
 import { MessageErreur } from '../../components/ui/Etats'
 import {
   Forme,
@@ -83,6 +84,7 @@ export default function FicheTitre({ id }) {
         <Caracteristiques elements={elements} />
       </Section>
       {o ? <CalculateurObligation key={titre.id} titre={titre} /> : <CalculateurDividende key={titre.id} titre={titre} />}
+      <HistoriqueCours key={`historique-${titre.id}`} titre={titre} />
     </Page>
   )
 }
