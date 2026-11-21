@@ -40,18 +40,21 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus (démarré : `start-pos
    - avec `psql` (les mots de passe sont demandés au clavier) :
 
      ```bash
-     psql -p 5433 -U postgres -f scripts/creer_base.sql
+     psql -h localhost -p 5433 -U postgres -d postgres -f scripts/creer_base.sql
      ```
+
+     La saisie des mots de passe est masquée (`\password`) ; le serveur ne reçoit que leur empreinte.
 
    - ou depuis DbVisualizer : suivre les étapes de `scripts/creer_base_dbvisualizer.sql`.
 
    - `cemac_app` : le compte de l'API, propriétaire de la base, sans droits de superutilisateur.
    - `cemac_lecture` : lecture seule, pour consulter les tables (DbVisualizer…).
 
-   Puis enregistrer la chaîne de connexion de l'API, jamais dans un fichier versionné :
+   Puis enregistrer la chaîne de connexion de l'API dans les user-secrets, jamais dans un
+   fichier versionné (le mot de passe de `cemac_app` est demandé masqué) :
 
-   ```bash
-   dotnet user-secrets set "ConnectionStrings:CemacBourseCalc" "Host=localhost;Port=5433;Database=cemac_bourse_calc;Username=cemac_app;Password=…" --project src/CemacBourseCalc.Api
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts\configurer_secret.ps1
    ```
 
 2. Appliquer les migrations :
@@ -61,7 +64,8 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus (démarré : `start-pos
    dotnet ef database update -p src/CemacBourseCalc.Infrastructure -s src/CemacBourseCalc.Api
    ```
 
-   Les migrations passent par le compte `cemac_app` (celui des user-secrets) : les tables lui
+   L'outil EF lit la configuration de l'API (pas de factory de conception) : les migrations
+   passent donc par le compte `cemac_app` des user-secrets. Les tables lui
    appartiennent, et `cemac_lecture` reçoit automatiquement le droit de les lire.
 
 3. Lancer l'API puis le front :
