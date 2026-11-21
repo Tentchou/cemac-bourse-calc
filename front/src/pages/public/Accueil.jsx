@@ -9,12 +9,25 @@ import { PAYS_CEMAC } from '../../components/carte/drapeaux'
 import { Page, Section } from '../../components/mise-en-page/MiseEnPage'
 import ListeTitres, { colonnesTitres } from '../../components/titres/ListeTitres'
 import { filtrerTitres } from '../../components/titres/filtrerTitres'
+import Pagination from '../../components/ui/pagination/Pagination'
+import { lirePage, lireTaille, paginer } from '../../components/ui/pagination/paginer'
 import Bascule from '../../components/ui/Bascule'
 import Bouton from '../../components/ui/Bouton'
 import { EtatVide, MessageErreur } from '../../components/ui/Etats'
 import Pilules from '../../components/ui/Pilules'
 import { SqueletteTableau } from '../../components/ui/Squelettes'
 import { usePreferences } from '../../contexte/Preferences'
+import { useRoute } from '../../routeur/Routeur'
+
+// Nombre de lignes choisi par le visiteur : simple confort, mémorisé si le stockage le permet.
+const CLE_LIGNES = 'cbc-lignes-titres'
+function tailleMemorisee() {
+  try {
+    return lireTaille(localStorage.getItem(CLE_LIGNES))
+  } catch {
+    return lireTaille(null)
+  }
+}
 
 /**
  * L'accueil : bandeau (recherche, chiffres clés, aperçu d'un calcul), carte des 6 pays, liste filtrable, 3 étapes.
@@ -28,17 +41,43 @@ export default function Accueil() {
   const [texte, setTexte] = useState('')
   const [type, setType] = useState('tous')
   const [pays, setPays] = useState(null)
+  const [taille, setTaille] = useState(tailleMemorisee)
+
+  // La page est dans l'adresse (?page=2) : le retour depuis une fiche revient au même endroit.
+  const { parametres, naviguer } = useRoute()
+  const pageDemandee = lirePage(parametres.get('page'))
+  const allerALaPage = (n) => naviguer(n > 1 ? `/?page=${n}` : '/', { remplacer: true })
 
   const liste = useMemo(() => titres ?? [], [titres])
   const comptes = useMemo(() => Object.fromEntries(PAYS_CEMAC.map((code) => [code, liste.filter((x) => x.pays === code).length])), [liste])
   const visibles = useMemo(() => filtrerTitres(liste, { texte, type, pays }), [liste, texte, type, pays])
+  const pagination = useMemo(() => paginer(visibles, pageDemandee, taille), [visibles, pageDemandee, taille])
   const filtre = texte || type !== 'tous' || pays
 
   const allerALaListe = () => document.getElementById('liste')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  // Tout changement de filtre ramène à la première page.
+  const filtrer = (changer) => (valeur) => {
+    changer(valeur)
+    if (pageDemandee > 1) allerALaPage(1)
+  }
   const effacer = () => {
     setTexte('')
     setType('tous')
     setPays(null)
+    if (pageDemandee > 1) allerALaPage(1)
+  }
+  const changerPage = (n) => {
+    allerALaPage(n)
+    allerALaListe()
+  }
+  const changerTaille = (n) => {
+    setTaille(n)
+    try {
+      localStorage.setItem(CLE_LIGNES, String(n))
+    } catch {
+      /* stockage indisponible : le choix vaut pour la visite */
+    }
+    if (pageDemandee > 1) allerALaPage(1)
   }
 
   const chiffres = [
@@ -52,7 +91,7 @@ export default function Accueil() {
     <Page>
       <BandeauAccueil
         texte={texte}
-        onTexte={setTexte}
+        onTexte={filtrer(setTexte)}
         onChercher={allerALaListe}
         chiffres={chiffres}
         chargement={chargement}
@@ -66,7 +105,7 @@ export default function Accueil() {
           chargement={chargement}
           valeur={pays}
           onChange={(code) => {
-            setPays(code)
+            filtrer(setPays)(code)
             if (code) allerALaListe()
           }}
         />
@@ -82,7 +121,7 @@ export default function Accueil() {
           <Bascule
             libelle={t('col.type')}
             valeur={type}
-            onChange={setType}
+            onChange={filtrer(setType)}
             options={[
               { valeur: 'tous', libelle: t('filtre.tous') },
               { valeur: 'Obligation', libelle: t('filtre.obligations'), icone: Banknote },
@@ -95,7 +134,7 @@ export default function Accueil() {
           className="mb-4"
           libelle={t('filtre.pays')}
           valeur={pays}
-          onChange={setPays}
+          onChange={filtrer(setPays)}
           options={[null, ...PAYS_CEMAC].map((code) => ({
             valeur: code,
             libelle: code ? t(`pays.${code}`) : t('filtre.tous'),
@@ -120,7 +159,10 @@ export default function Accueil() {
             }
           />
         ) : (
-          <ListeTitres titres={visibles} className="apparition" />
+          <>
+            <ListeTitres titres={pagination.lignes} className="apparition" />
+            <Pagination etat={pagination} taille={taille} onPage={changerPage} onTaille={changerTaille} />
+          </>
         )}
       </Section>
 
