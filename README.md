@@ -6,7 +6,7 @@ Coupon couru, prix plein coupon, échéancier des coupons et des remboursements,
 rendement du dividende : chaque calcul est fait au centime, expliqué pas à pas, et **comparé
 automatiquement aux chiffres publiés par la Bourse des valeurs mobilières de l'Afrique centrale**.
 
-![.NET 10](https://img.shields.io/badge/.NET-10-512BD4) ![React 19](https://img.shields.io/badge/React-19-61DAFB) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791) ![Tests](https://img.shields.io/badge/tests-339%20verts-2ea44f) ![Langues](https://img.shields.io/badge/FR%20%7C%20EN-clair%20%2F%20sombre-1F5BD6)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4) ![React 19](https://img.shields.io/badge/React-19-61DAFB) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791) ![Tests](https://img.shields.io/badge/tests-350%20verts-2ea44f) ![Langues](https://img.shields.io/badge/FR%20%7C%20EN-clair%20%2F%20sombre-1F5BD6)
 
 > Outil éducatif et indépendant. Ce n'est pas un conseil en investissement ; les ordres se passent
 > auprès d'une société de bourse agréée par la COSUMAF.
@@ -61,6 +61,7 @@ les retire de la liste.
   - le rendement actuariel et le rendement courant ;
   - l'échéancier complet, avec son graphique.
 - **Fiche action :** le dernier cours, les dividendes et le rendement du dividende.
+- **Historique des cours, sur chaque fiche :** la courbe des cours de clôture avec les volumes, sur 1 mois, 3 mois, 6 mois, 1 an ou tout l'historique ; le plus haut, le plus bas, la variation sur la période, et le tableau des séances. Survol à la souris, au doigt ou au clavier.
 - **Méthodes :** chaque formule expliquée avec un exemple chiffré, et un lien « Comment c'est calculé » sous chaque résultat.
 - **Utilisable par tous :** français et anglais, thème clair et sombre, parfait dès 360 px de large, accessible au clavier et aux lecteurs d'écran.
 
@@ -190,6 +191,7 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus.
 | Public | |
 |---|---|
 | `GET api/titres` · `GET api/titres/{id}` | liste et fiche des titres |
+| `GET api/titres/{id}/cours` | historique des cours (environ cinq ans de séances, du plus ancien au plus récent) |
 | `GET api/obligations/{id}/coupon-couru?dateNegociation&quantite&cours` | coupon couru et prix plein coupon |
 | `GET api/obligations/{id}/echeancier` · `…/rendement` | échéancier, rendements |
 | `GET api/actions/{id}/rendement-dividende?cours` | rendement du dividende |
@@ -205,7 +207,7 @@ L'administration (`api/admin/…`, session obligatoire) offre pour chaque rubriq
 - [x] Données réelles du bulletin n° 2643 et comparaison automatique avec la BVMAC
 - [x] Administration : listes paginées, saisie à l'unité, import de fichier
 - [x] Import du bulletin de la cote (PDF) avec aperçu et contrôle des coupons courus
-- [ ] Historique des cours et graphiques d'évolution
+- [x] Historique des cours et graphiques d'évolution
 - [ ] Téléchargement automatique du bulletin chaque soir (selon les conditions d'utilisation de la BVMAC)
 - [ ] Portefeuille simulé (fictif, éducatif)
 - [ ] Modification des titres avec journal ; calendrier officiel des jours fériés ; mise en ligne
