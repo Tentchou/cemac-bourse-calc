@@ -6,7 +6,7 @@ Coupon couru, prix plein coupon, échéancier des coupons et des remboursements,
 rendement du dividende : chaque calcul est fait au centime, expliqué pas à pas, et **comparé
 automatiquement aux chiffres publiés par la Bourse des valeurs mobilières de l'Afrique centrale**.
 
-![.NET 10](https://img.shields.io/badge/.NET-10-512BD4) ![React 19](https://img.shields.io/badge/React-19-61DAFB) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791) ![Tests](https://img.shields.io/badge/tests-350%20verts-2ea44f) ![Langues](https://img.shields.io/badge/FR%20%7C%20EN-clair%20%2F%20sombre-1F5BD6)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4) ![React 19](https://img.shields.io/badge/React-19-61DAFB) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791) ![Tests](https://img.shields.io/badge/tests-385%20verts-2ea44f) ![Langues](https://img.shields.io/badge/FR%20%7C%20EN-clair%20%2F%20sombre-1F5BD6)
 
 > Outil éducatif et indépendant. Ce n'est pas un conseil en investissement ; les ordres se passent
 > auprès d'une société de bourse agréée par la COSUMAF.
@@ -28,6 +28,12 @@ et des actions cotées. Mais les questions les plus simples restent sans répons
 
 Les réponses existent, mais elles sont réparties dans un PDF de 27 pages publié chaque soir (le bulletin
 officiel de la cote) et dans des prospectus. CEMAC Bourse Calc les rassemble, les calcule et les explique.
+
+## Objectif
+
+- Donner, pour chaque titre coté, les chiffres qu'un épargnant doit connaître avant d'acheter : prix réel, revenus, dates, rendement.
+- Montrer le calcul, pas seulement le résultat, pour qu'il puisse être vérifié.
+- Prouver la justesse du calcul en le confrontant automatiquement aux publications officielles de la BVMAC.
 
 **Pour qui ?**
 - **Les épargnants :** comprendre avant d'acheter, puis vérifier l'avis d'opéré reçu de sa société de bourse.
@@ -74,6 +80,8 @@ les retire de la liste.
   4. elle affiche un aperçu, puis l'administrateur valide.
 
   La saisie quotidienne des cours passe ainsi de 40 lignes à un seul dépôt de fichier.
+- **Modifier un titre :** un clic sur la ligne rouvre le formulaire prérempli. Tout est modifiable sauf l'ISIN et le type. Un titre qui a déjà des cours, des dividendes ou des documents est **radié** (masqué du site public, historique conservé) ; seul un titre sans historique est effacé.
+- **Préparer une année du calendrier :** les jours fériés certains du Cameroun (dates fixes, Vendredi saint, Ascension, report du dimanche au lundi) sont calculés, comparés au calendrier déjà saisi, puis ajoutés après validation. Les deux fêtes de l'Aïd, fixées par la lune, sont saisies à la publication de l'avis de la BVMAC.
 - **Tout ou rien :** s'il reste une seule ligne à corriger, rien n'est enregistré. La saisie à l'unité et l'import suivent exactement les mêmes règles.
 
 ## Le calcul, en bref
@@ -89,6 +97,8 @@ les retire de la liste.
 Tout est calculé en `decimal`, jamais en virgule flottante, dans une couche Domain en C# pur, sans dépendance externe.
 
 ## Architecture
+
+<!-- GIF de l'architecture : glisser le fichier ici, dans l'éditeur de GitHub. -->
 
 ```mermaid
 flowchart LR
@@ -129,7 +139,7 @@ flowchart LR
   - 5 essais de connexion par minute.
 - **Protection CSRF :** toute écriture exige un en-tête dédié.
 - **Limites :** nombre de requêtes par minute, taille des envois, 500 lignes par import, PDF de 10 Mo au plus gardé en mémoire seulement.
-- **Traçabilité :** chaque création est inscrite au journal d'administration, dans la même transaction.
+- **Traçabilité :** chaque création, modification, radiation ou suppression est inscrite au journal d'administration (avec l'état avant et après), dans la même transaction.
 
 ## Démarrer
 
@@ -199,6 +209,9 @@ Prérequis : .NET SDK 10, Node 22, PostgreSQL 16 ou plus.
 L'administration (`api/admin/…`, session obligatoire) offre pour chaque rubrique trois routes :
 `GET` (liste paginée), `POST` (création d'une ligne) et `POST …/masse` (import, tout ou rien). S'y ajoutent
 `POST api/admin/bulletins/analyse` (aperçu du PDF du bulletin) et `GET api/admin/compteurs`.
+Pour les titres : `GET api/admin/titres/{id}` (détail), `PUT api/admin/obligations/{id}` · `PUT api/admin/actions/{id}`
+(modification) et `DELETE api/admin/titres/{id}` (radiation ou effacement). Pour le calendrier :
+`GET api/admin/jours-non-ouvres/preparation?annee=` (aperçu des jours fériés d'une année).
 
 ## Feuille de route
 
@@ -209,8 +222,10 @@ L'administration (`api/admin/…`, session obligatoire) offre pour chaque rubriq
 - [x] Import du bulletin de la cote (PDF) avec aperçu et contrôle des coupons courus
 - [x] Historique des cours et graphiques d'évolution
 - [ ] Téléchargement automatique du bulletin chaque soir (selon les conditions d'utilisation de la BVMAC)
+- [x] Modification et radiation des titres, avec journal
+- [x] Calendrier officiel des jours fériés du Cameroun, préparé année par année
+- [ ] Mise en ligne
 - [ ] Portefeuille simulé (fictif, éducatif)
-- [ ] Modification des titres avec journal ; calendrier officiel des jours fériés ; mise en ligne
 
 ## Sources
 
@@ -218,3 +233,8 @@ Les données viennent des publications officielles de la **BVMAC** (bulletins of
 fiches des émetteurs) et des prospectus visés par la **COSUMAF**, le régulateur du marché financier de
 l'Afrique centrale. Elles restent la propriété de leurs auteurs. Ce projet n'est affilié ni à la BVMAC
 ni à la COSUMAF.
+
+## Licence
+
+Code publié sous licence [MIT](LICENSE). Les données de la BVMAC et de la COSUMAF n'en font pas partie :
+elles restent soumises aux conditions de leurs auteurs.
