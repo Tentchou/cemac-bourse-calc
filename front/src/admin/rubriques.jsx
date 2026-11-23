@@ -36,6 +36,11 @@ const cellPays = (t, code) => (
   </span>
 )
 
+/** Le statut d'un titre : rien pour un titre actif (le cas courant), une étiquette sinon. */
+const TONS_STATUT = { Suspendu: 'orange', Echu: 'neutre', Radie: 'erreur' }
+const cellStatut = (t, statut) =>
+  !statut || statut === 'Actif' ? <span className="text-texte-2">{t('admin.statut.Actif')}</span> : <Etiquette ton={TONS_STATUT[statut] ?? 'neutre'}>{t(`admin.statut.${statut}`)}</Etiquette>
+
 /** Le cours d'une obligation est en % du nominal ; celui d'une action en FCFA. */
 const cours = (p, valeur, typeTitre) =>
   valeur === null || valeur === undefined ? '—' : typeTitre === 'Obligation' ? p.pourcent(valeur, 2) : p.montant(valeur, 0)
@@ -77,6 +82,7 @@ export const RUBRIQUES = [
       { cle: 'echeance', titre: p.t('admin.col.echeance'), rendu: (o) => p.date(o.dateEcheance) },
       { cle: 'convention', titre: p.t('admin.col.convention'), rendu: (o) => libelleChoix(p.t, o.codeConvention, choixDe('obligations', 'codeConvention')) },
       { cle: 'controle', titre: p.t('admin.col.controle'), rendu: (o) => <ControleCoupon controle={o.controle} /> },
+      { cle: 'statut', titre: p.t('admin.col.statut'), rendu: (o) => cellStatut(p.t, o.statut) },
     ],
   },
   {
@@ -95,6 +101,7 @@ export const RUBRIQUES = [
       { cle: 'nombreTitres', titre: p.t('admin.col.nombreTitres'), droite: true, rendu: (a) => p.nombre(a.nombreTitres, 0) },
       { cle: 'admission', titre: p.t('admin.col.admission'), rendu: (a) => p.date(a.dateAdmission) },
       { cle: 'dernierCours', titre: p.t('admin.col.dernierCours'), droite: true, rendu: (a) => <span className="font-semibold">{cours(p, a.dernierCours, 'Action')}</span> },
+      { cle: 'statut', titre: p.t('admin.col.statut'), rendu: (a) => cellStatut(p.t, a.statut) },
     ],
   },
   {
@@ -162,6 +169,7 @@ export const RUBRIQUES = [
     icone: CalendarX,
     modele: 'joursNonOuvres',
     compteur: 'joursNonOuvres',
+    preparation: true, // « Préparer une année » : les jours fériés certains du Cameroun
     recherche: 'admin.filtre.recherche.jours',
     filtres: (t) => {
       const annee = new Date().getFullYear()

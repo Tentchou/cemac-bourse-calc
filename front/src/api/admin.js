@@ -69,6 +69,21 @@ export const listerSeances = (signal) => appeler('cours/seances', { signal })
 export const creer = (route, commande) => appeler(route, { methode: 'POST', corps: commande })
 
 /**
+ * L'aperçu d'une année du calendrier : { annee, proposes: [{ date, libelle, dejaEnregistre, libelleEnregistre }],
+ * autresEnregistres: [{ date, libelle }] }. Rien n'est enregistré.
+ */
+export const preparerAnnee = (annee, signal) => appeler(`jours-non-ouvres/preparation?${parametresListe({ annee })}`, { signal })
+
+/** Un titre complet pour le formulaire de modification, avec la taille de son historique. */
+export const lireTitre = (id, signal) => appeler(`titres/${encodeURIComponent(id)}`, { signal })
+
+/** Modification d'un titre (obligations ou actions) : { id, message }. Mêmes refus par champ qu'un ajout. */
+export const modifier = (route, id, commande) => appeler(`${route}/${encodeURIComponent(id)}`, { methode: 'PUT', corps: commande })
+
+/** Retire un titre : effacé s'il n'a aucun historique, radié sinon. Rend { id: { id, efface }, message }. */
+export const supprimerTitre = (id) => appeler(`titres/${encodeURIComponent(id)}`, { methode: 'DELETE' })
+
+/**
  * Lecture d'un bulletin de la cote (PDF) par l'API : l'aperçu, sans rien enregistrer.
  * Le fichier part en multipart ; l'en-tête X-CBC-Admin est exigé comme pour toute écriture.
  */

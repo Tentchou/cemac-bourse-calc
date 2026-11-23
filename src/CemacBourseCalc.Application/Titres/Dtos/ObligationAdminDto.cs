@@ -16,4 +16,5 @@ public sealed record ObligationAdminDto(
     DateOnly DateEcheance,
     string CodeConvention,
     string RegimeFiscal,
+    string Statut,
     ControleCouponCouruDto? Controle = null);

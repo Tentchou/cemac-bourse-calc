@@ -2,6 +2,7 @@ using CemacBourseCalc.Api.Securite;
 using CemacBourseCalc.Application.Common.Pagination;
 using CemacBourseCalc.Application.Place.Dtos;
 using CemacBourseCalc.Application.Place.Queries.ListerJoursNonOuvres;
+using CemacBourseCalc.Application.Place.Queries.PreparerAnnee;
 using CemacBourseCalc.Application.Place.Commands.AjouterJourNonOuvre;
 using CemacBourseCalc.Application.Place.Commands.AjouterJoursNonOuvresEnMasse;
 using MediatR;
@@ -21,6 +22,14 @@ public sealed class CalendrierAdminController(ISender mediator) : ControleurAdmi
         [FromQuery] int page = 1, [FromQuery] int taille = 10, [FromQuery] string? recherche = null,
         [FromQuery] int? annee = null, CancellationToken ct = default) =>
         Ok(await mediator.Send(new ListerJoursNonOuvresQuery(page, taille, recherche, annee), ct));
+
+    /// <summary>
+    /// GET api/admin/jours-non-ouvres/preparation?annee=2027 — les jours fériés certains du Cameroun pour l'année,
+    /// croisés avec le calendrier déjà saisi. Rien n'est enregistré : l'écran envoie ensuite les jours retenus à /masse.
+    /// </summary>
+    [HttpGet("preparation")]
+    public async Task<ActionResult<AnneePrepareeDto>> Preparer([FromQuery] int annee, CancellationToken ct) =>
+        Ok(await mediator.Send(new PreparerAnneeQuery(annee), ct));
 
     /// <summary>POST api/admin/jours-non-ouvres { date, libelle }</summary>
     [HttpPost]

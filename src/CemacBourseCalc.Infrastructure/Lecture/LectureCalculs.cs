@@ -13,7 +13,8 @@ namespace CemacBourseCalc.Infrastructure.Lecture;
 /// </summary>
 public sealed class LectureCalculs(NpgsqlDataSource source) : ILectureCalculs
 {
-    private const string SqlObligation = """
+    // Un titre radié n'est plus calculé pour le public (404), comme il n'a plus de fiche.
+    private const string SqlObligation = $"""
         SELECT t.nom                 AS Nom,
                t.nominal             AS Nominal,
                o.taux_facial         AS TauxFacial,
@@ -26,12 +27,12 @@ public sealed class LectureCalculs(NpgsqlDataSource source) : ILectureCalculs
                o.code_convention     AS CodeConvention
         FROM titre t
         JOIN obligation o ON o.titre_id = t.id
-        WHERE t.id = @TitreId
+        WHERE t.id = @TitreId AND t.statut <> '{nameof(StatutTitre.Radie)}'
         """;
 
     // Le dernier exercice seulement, ses versements additionnés (index ix_dividende_titre_id_exercice).
     // Le net n'est sommé que si chaque versement en a un : sinon le total serait faux.
-    private const string SqlDernierDividende = """
+    private const string SqlDernierDividende = $"""
         SELECT t.nom          AS Nom,
                d.exercice     AS Exercice,
                d.brut         AS Brut,
@@ -50,7 +51,7 @@ public sealed class LectureCalculs(NpgsqlDataSource source) : ILectureCalculs
             ORDER BY exercice DESC
             LIMIT 1
         ) d ON TRUE
-        WHERE t.id = @TitreId
+        WHERE t.id = @TitreId AND t.statut <> '{nameof(StatutTitre.Radie)}'
         """;
 
     private const string SqlParametre ="SELECT valeur FROM parametre WHERE cle = @Cle";

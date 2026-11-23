@@ -9,7 +9,8 @@ namespace CemacBourseCalc.Application.Tests;
 /// <summary>La vraie couche Application (MediatR, validateurs, handlers) branchée sur la fausse base.</summary>
 internal static class Montage
 {
-    public static (IServiceProvider Services, FausseBase Base) Creer(Guid? administrateurConnecte)
+    /// <param name="completer">Ajoute les faux propres à un test (écriture des titres…), une fois la fausse base créée.</param>
+    public static (IServiceProvider Services, FausseBase Base) Creer(Guid? administrateurConnecte, Action<IServiceCollection, FausseBase>? completer = null)
     {
         var base_ = new FausseBase();
         var services = new ServiceCollection();
@@ -20,6 +21,7 @@ internal static class Montage
         services.AddSingleton<IAdministrateursEcriture>(new FauxAdministrateurs(base_));
         services.AddSingleton<IAdministrateurCourant>(new FauxAdministrateurCourant(administrateurConnecte));
         services.AddSingleton<IHacheurMotDePasse, HacheurMotDePasse>();
+        completer?.Invoke(services, base_);
         return (services.BuildServiceProvider(), base_);
     }
 }

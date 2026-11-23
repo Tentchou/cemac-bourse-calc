@@ -39,6 +39,30 @@ public sealed class Obligation : Titre
         ModeRemboursement modeRemboursement, int differeEcheances, string codeConvention, RegimeFiscal regimeFiscal)
         : base(isin, nom, emetteurId, TypeTitre.Obligation, nominal, dateAdmission)
     {
+        Verifier(tauxFacial, dateJouissance, datePremierCoupon, dateEcheance, modeRemboursement, differeEcheances, codeConvention);
+        Appliquer(tauxFacial, periodicite, dateJouissance, datePremierCoupon, dateEcheance, modeRemboursement, differeEcheances, codeConvention, regimeFiscal);
+    }
+
+    /// <summary>
+    /// Corrige les caractéristiques (tout sauf l'ISIN et le type), avec les mêmes règles qu'à la création.
+    /// Tout est vérifié avant le moindre changement : une modification refusée ne change rien.
+    /// </summary>
+    public void Modifier(
+        string nom, Guid emetteurId, decimal nominal, DateOnly? dateAdmission, StatutTitre statut,
+        decimal tauxFacial, Periodicite periodicite, DateOnly dateJouissance, DateOnly? datePremierCoupon, DateOnly dateEcheance,
+        ModeRemboursement modeRemboursement, int differeEcheances, string codeConvention, RegimeFiscal regimeFiscal)
+    {
+        VerifierCommun(nom, emetteurId, nominal, statut);
+        Verifier(tauxFacial, dateJouissance, datePremierCoupon, dateEcheance, modeRemboursement, differeEcheances, codeConvention);
+
+        AppliquerCommun(nom, emetteurId, nominal, dateAdmission, statut);
+        Appliquer(tauxFacial, periodicite, dateJouissance, datePremierCoupon, dateEcheance, modeRemboursement, differeEcheances, codeConvention, regimeFiscal);
+    }
+
+    private static void Verifier(
+        decimal tauxFacial, DateOnly dateJouissance, DateOnly? datePremierCoupon, DateOnly dateEcheance,
+        ModeRemboursement modeRemboursement, int differeEcheances, string codeConvention)
+    {
         if (tauxFacial < 0m || tauxFacial > 100m) throw new DomainException("Le taux facial s'exprime en pourcentage, entre 0 et 100.");
         if (dateEcheance <= dateJouissance) throw new DomainException("La date d'échéance doit être après la date de jouissance.");
         if (datePremierCoupon is { } premier && (premier <= dateJouissance || premier > dateEcheance))
@@ -48,7 +72,12 @@ public sealed class Obligation : Titre
             throw new DomainException("Un différé d'amortissement n'a de sens que pour une obligation amortissable.");
         if (ConventionsDecompte.Trouver(codeConvention) is null)
             throw new DomainException($"La convention de décompte « {codeConvention} » n'est pas connue.");
+    }
 
+    private void Appliquer(
+        decimal tauxFacial, Periodicite periodicite, DateOnly dateJouissance, DateOnly? datePremierCoupon, DateOnly dateEcheance,
+        ModeRemboursement modeRemboursement, int differeEcheances, string codeConvention, RegimeFiscal regimeFiscal)
+    {
         TauxFacial = tauxFacial;
         Periodicite = periodicite;
         DateJouissance = dateJouissance;

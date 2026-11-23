@@ -8,4 +8,7 @@ namespace CemacBourseCalc.Application.Place.Interfaces;
 public interface IJoursNonOuvresLecture
 {
     Task<PageDto<JourNonOuvreDto>> PageAsync(ListerJoursNonOuvresQuery q, CancellationToken ct);
+
+    /// <summary>Tous les jours non ouvrés d'une année (quelques dizaines au plus), dans l'ordre des dates.</summary>
+    Task<IReadOnlyList<JourNonOuvreDto>> DeLAnneeAsync(int annee, CancellationToken ct);
 }

@@ -10,4 +10,7 @@ public interface ITitresAdminLecture
 {
     Task<PageDto<ObligationAdminLigne>> ObligationsAsync(ListerObligationsAdminQuery q, CancellationToken ct);
     Task<PageDto<ActionAdminDto>> ActionsAsync(ListerActionsAdminQuery q, CancellationToken ct);
+
+    /// <summary>Un titre complet pour le formulaire de modification, ou null s'il n'existe pas.</summary>
+    Task<TitreAdminDetailDto?> DetailAsync(Guid id, CancellationToken ct);
 }

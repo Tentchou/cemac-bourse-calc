@@ -11,4 +11,5 @@ public sealed record ActionAdminDto(
     long NombreTitres,
     DateOnly? DateAdmission,
     decimal? DernierCours,
-    DateOnly? DateDernierCours);
+    DateOnly? DateDernierCours,
+    string Statut);

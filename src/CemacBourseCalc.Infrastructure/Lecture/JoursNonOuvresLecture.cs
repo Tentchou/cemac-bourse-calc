@@ -23,6 +23,17 @@ public sealed class JoursNonOuvresLecture(NpgsqlDataSource source) : IJoursNonOu
         LIMIT @Taille OFFSET @Decalage
         """;
 
+    // L'année entière, sur la clé primaire (date) : un parcours d'intervalle.
+    private const string SqlAnnee = "SELECT j.date AS Date, j.libelle AS Libelle FROM jour_non_ouvre j WHERE j.date BETWEEN @Du::date AND @Au::date ORDER BY j.date";
+
+    public async Task<IReadOnlyList<JourNonOuvreDto>> DeLAnneeAsync(int annee, CancellationToken ct)
+    {
+        await using var connexion = await source.OpenConnectionAsync(ct);
+        var lignes = await connexion.QueryAsync<Ligne>(new CommandDefinition(SqlAnnee,
+            new { Du = new DateTime(annee, 1, 1), Au = new DateTime(annee, 12, 31) }, cancellationToken: ct));
+        return lignes.Select(l => new JourNonOuvreDto(DateOnly.FromDateTime(l.Date), l.Libelle)).ToList();
+    }
+
     public Task<PageDto<JourNonOuvreDto>> PageAsync(ListerJoursNonOuvresQuery q, CancellationToken ct)
     {
         var parametres = new DynamicParameters(new

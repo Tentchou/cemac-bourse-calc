@@ -20,6 +20,12 @@ public abstract class ControleurAdmin : ControllerBase
             ? StatusCode(StatusCodes.Status201Created, new CreationReponse<T>(resultat.Valeur!, resultat.Message))
             : Problem(title: resultat.Message, statusCode: StatusCodes.Status400BadRequest);
 
+    /// <summary>200 avec le résultat et son message (modification, suppression), ou 400 avec le message en français.</summary>
+    protected ActionResult Fait<T>(Result<T> resultat) =>
+        resultat.Reussi
+            ? Ok(new CreationReponse<T>(resultat.Valeur!, resultat.Message))
+            : Problem(title: resultat.Message, statusCode: StatusCodes.Status400BadRequest);
+
     /// <summary>200 si tout est enregistré ; 422 avec la liste des lignes à corriger (et rien d'enregistré).</summary>
     protected ActionResult Masse(Result<ResultatMasseDto> resultat)
     {

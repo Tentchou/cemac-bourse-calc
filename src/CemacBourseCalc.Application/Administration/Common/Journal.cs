@@ -4,6 +4,9 @@ namespace CemacBourseCalc.Application.Administration.Common;
 public static class Journal
 {
     public const string Creation = "Creation";
+    public const string Modification = "Modification";
+    public const string Suppression = "Suppression";
+    public const string Radiation = "Radiation";
     public const string Connexion = "Connexion";
     public const string Deconnexion = "Deconnexion";
 

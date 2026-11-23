@@ -2,7 +2,10 @@ using CemacBourseCalc.Domain.Communs;
 
 namespace CemacBourseCalc.Domain.Titres;
 
-/// <summary>Un titre coté à la BVMAC : ce que les obligations et les actions ont en commun. Montants en francs CFA (XAF).</summary>
+/// <summary>
+/// Un titre coté à la BVMAC : ce que les obligations et les actions ont en commun. Montants en francs CFA (XAF).
+/// L'ISIN et le type ne changent jamais : ce sont l'identité du titre (et la clé de l'import du bulletin).
+/// </summary>
 public abstract class Titre
 {
     public Guid Id { get; private set; }
@@ -18,19 +21,42 @@ public abstract class Titre
 
     protected Titre(Isin isin, string nom, Guid emetteurId, TypeTitre typeTitre, decimal nominal, DateOnly? dateAdmission)
     {
-        if (string.IsNullOrWhiteSpace(nom)) throw new DomainException("Le nom du titre est obligatoire.");
-        if (emetteurId == Guid.Empty) throw new DomainException("Choisissez l'émetteur du titre.");
-        if (nominal <= 0m) throw new DomainException("La valeur nominale doit être supérieure à 0 FCFA.");
+        VerifierCommun(nom, emetteurId, nominal, StatutTitre.Actif);
 
         Id = Identifiant.Nouveau();
         Isin = isin;
-        Nom = nom.Trim();
-        EmetteurId = emetteurId;
         TypeTitre = typeTitre;
-        Nominal = nominal;
-        DateAdmission = dateAdmission;
-        Statut = StatutTitre.Actif;
+        AppliquerCommun(nom, emetteurId, nominal, dateAdmission, StatutTitre.Actif);
     }
 
-    public void ChangerStatut(StatutTitre statut) => Statut = statut;
+    /// <summary>
+    /// Les règles communes, vérifiées AVANT tout changement : une modification refusée ne laisse
+    /// jamais un titre à moitié modifié.
+    /// </summary>
+    protected static void VerifierCommun(string nom, Guid emetteurId, decimal nominal, StatutTitre statut)
+    {
+        if (string.IsNullOrWhiteSpace(nom)) throw new DomainException("Le nom du titre est obligatoire.");
+        if (emetteurId == Guid.Empty) throw new DomainException("Choisissez l'émetteur du titre.");
+        if (nominal <= 0m) throw new DomainException("La valeur nominale doit être supérieure à 0 FCFA.");
+        if (!Enum.IsDefined(statut)) throw new DomainException("Le statut du titre n'est pas reconnu.");
+    }
+
+    /// <summary>Applique les champs communs, déjà vérifiés par <see cref="VerifierCommun"/>.</summary>
+    protected void AppliquerCommun(string nom, Guid emetteurId, decimal nominal, DateOnly? dateAdmission, StatutTitre statut)
+    {
+        Nom = nom.Trim();
+        EmetteurId = emetteurId;
+        Nominal = nominal;
+        DateAdmission = dateAdmission;
+        Statut = statut;
+    }
+
+    public void ChangerStatut(StatutTitre statut)
+    {
+        if (!Enum.IsDefined(statut)) throw new DomainException("Le statut du titre n'est pas reconnu.");
+        Statut = statut;
+    }
+
+    /// <summary>Retire le titre de la cote : il disparaît du site public, son historique est gardé.</summary>
+    public void Radier() => Statut = StatutTitre.Radie;
 }

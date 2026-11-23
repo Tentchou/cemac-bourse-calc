@@ -1,6 +1,7 @@
-import { CircleCheck, FileText, Plus, Search, Upload, X } from 'lucide-react'
+import { CalendarCheck, CircleCheck, FileText, Plus, Search, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { listerSeances } from '../../api/admin'
+import { RUBRIQUES_MODIFIABLES } from '../../admin/edition'
 import { MODELES } from '../../admin/import/modeles'
 import useListeAdmin from '../../admin/useListeAdmin'
 import { usePreferences } from '../../contexte/Preferences'
@@ -10,9 +11,10 @@ import Pagination from '../ui/pagination/Pagination'
 import { etatPage } from '../ui/pagination/paginer'
 import { SqueletteTableau } from '../ui/Squelettes'
 import Tableau from '../ui/Tableau'
-import FormulaireAjout from './FormulaireAjout'
+import FormulaireSaisie from './FormulaireSaisie'
 import ImportBulletin from './ImportBulletin'
 import ImportFichier from './ImportFichier'
+import PreparationAnnee from './PreparationAnnee'
 
 const CLASSE_FILTRE =
   'h-10 min-w-0 rounded-full border border-bordure-champ bg-surface px-4 text-sm text-texte outline-none transition-[border-color,box-shadow] hover:border-texte-2 focus:border-action focus:ring-4 focus:ring-action/15'
@@ -20,13 +22,14 @@ const CLASSE_FILTRE =
 /**
  * Une rubrique de l'administration : titre et nombre de lignes, « Importer un fichier » et « Ajouter »,
  * filtres, tableau paginé par l'API. Après un ajout ou un import, la liste et les compteurs sont relus.
+ * Pour les titres, un clic sur une ligne ouvre le même panneau, prérempli, pour la modifier ou la retirer.
  */
 export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) {
   const p = usePreferences()
   const { t } = p
   const route = MODELES[rubrique.modele].route
   const liste = useListeAdmin(route, { onSessionExpiree })
-  const [panneau, setPanneau] = useState(null) // null · ajouter · importer · bulletin
+  const [panneau, setPanneau] = useState(null) // null · ajouter · importer · bulletin · preparation · { modifier: id }
   const [succes, setSucces] = useState(null)
   const [seances, setSeances] = useState([])
 
@@ -46,6 +49,11 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
   }, [succes])
 
   const colonnes = useMemo(() => rubrique.colonnes(p), [rubrique, p])
+  const modifiable = RUBRIQUES_MODIFIABLES.includes(rubrique.cle)
+  const actionLigne = useMemo(
+    () => (modifiable ? { surClic: (ligne) => setPanneau({ modifier: ligne.id }), libelle: (ligne) => t('admin.modif.ligne', { nom: ligne.nom }) } : undefined),
+    [modifiable, t],
+  )
   const filtres = useMemo(() => rubrique.filtres?.(t) ?? [], [rubrique, t])
   const donnees = liste.donnees
   const total = donnees?.total ?? 0
@@ -81,9 +89,20 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
             {t('admin.importer')}
           </Bouton>
           {/* Sur la page des cours, l'import du bulletin est le geste de tous les jours : c'est l'action principale. */}
-          <Bouton taille="petite" variante={rubrique.bulletin ? 'secondaire' : 'action'} icone={Plus} onClick={() => setPanneau('ajouter')}>
+          <Bouton
+            taille="petite"
+            variante={rubrique.bulletin || rubrique.preparation ? 'secondaire' : 'action'}
+            icone={Plus}
+            onClick={() => setPanneau('ajouter')}
+          >
             {t('admin.ajouter')}
           </Bouton>
+          {/* Le calendrier se prépare une année à la fois : c'est l'action principale de la page. */}
+          {rubrique.preparation && (
+            <Bouton taille="petite" variante="action" icone={CalendarCheck} onClick={() => setPanneau('preparation')} className="max-sm:order-first max-sm:basis-full">
+              {t('admin.preparation.bouton')}
+            </Bouton>
+          )}
           {rubrique.bulletin && (
             <Bouton taille="petite" variante="action" icone={FileText} onClick={() => setPanneau('bulletin')} className="max-sm:order-first max-sm:basis-full">
               {t('admin.bulletin.bouton')}
@@ -164,6 +183,7 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
             colonnes={colonnes}
             lignes={donnees.lignes}
             cleLigne={(ligne) => ligne.id ?? ligne.date}
+            actionLigne={actionLigne}
           />
           <Pagination
             etat={pagination}
@@ -177,13 +197,15 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
         </div>
       )}
 
-      {panneau === 'ajouter' && (
-        <FormulaireAjout
+      {(panneau === 'ajouter' || panneau?.modifier) && (
+        <FormulaireSaisie
+          key={panneau?.modifier ?? 'ajout'}
           rubrique={rubrique}
+          titreId={panneau?.modifier ?? null}
           onFermer={() => setPanneau(null)}
-          onCree={() => {
+          onEnregistre={(texte) => {
             setPanneau(null)
-            apresEnregistrement(t('admin.cree'))
+            apresEnregistrement(texte)
           }}
           onSessionExpiree={onSessionExpiree}
         />
@@ -194,6 +216,9 @@ export default function PageRubrique({ rubrique, onModifie, onSessionExpiree }) 
           onImporte={(texte) => apresEnregistrement(texte)}
           onSessionExpiree={onSessionExpiree}
         />
+      )}
+      {panneau === 'preparation' && (
+        <PreparationAnnee onFermer={() => setPanneau(null)} onImporte={(texte) => apresEnregistrement(texte)} onSessionExpiree={onSessionExpiree} />
       )}
       {panneau === 'importer' && (
         <ImportFichier

@@ -1,5 +1,6 @@
 using CemacBourseCalc.Application.Titres.Dtos;
 using CemacBourseCalc.Application.Titres.Interfaces;
+using CemacBourseCalc.Domain.Communs;
 using Dapper;
 using Npgsql;
 
@@ -13,6 +14,7 @@ public sealed class TitresLecture(NpgsqlDataSource source) : ITitresLecture
 {
     // Le dernier cours : la séance la plus récente (index unique ix_cours_titre_id_date_seance),
     // cours de clôture, à défaut cours de référence.
+    // Un titre radié n'apparaît plus sur le site public (son historique reste en base).
     private const string DernierCours = """
         LEFT JOIN LATERAL (
             SELECT COALESCE(c.cours_cloture, c.cours_reference) AS cours, c.date_seance
@@ -40,6 +42,7 @@ public sealed class TitresLecture(NpgsqlDataSource source) : ITitresLecture
         JOIN emetteur e ON e.id = t.emetteur_id
         LEFT JOIN obligation o ON o.titre_id = t.id
         {DernierCours}
+        WHERE t.statut <> '{nameof(StatutTitre.Radie)}'
         ORDER BY t.nom
         """;
 
@@ -68,7 +71,7 @@ public sealed class TitresLecture(NpgsqlDataSource source) : ITitresLecture
         LEFT JOIN obligation o ON o.titre_id = t.id
         LEFT JOIN action a ON a.titre_id = t.id
         {DernierCours}
-        WHERE t.id = @Id
+        WHERE t.id = @Id AND t.statut <> '{nameof(StatutTitre.Radie)}'
         """;
 
     // Index ix_dividende_titre_id_exercice. Borné : une fiche n'affiche pas un historique sans fin.
