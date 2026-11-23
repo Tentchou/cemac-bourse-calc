@@ -6,6 +6,7 @@ import EtapesIllustrees from '../../components/accueil/EtapesIllustrees'
 import CarteCemac from '../../components/carte/CarteCemac'
 import Drapeau from '../../components/carte/Drapeau'
 import { PAYS_CEMAC } from '../../components/carte/drapeaux'
+import { OBLIGATION } from '../../components/methodes/exemples'
 import { Page, Section } from '../../components/mise-en-page/MiseEnPage'
 import ListeTitres, { colonnesTitres } from '../../components/titres/ListeTitres'
 import { filtrerTitres } from '../../components/titres/filtrerTitres'
@@ -85,7 +86,7 @@ export default function Accueil() {
     { cle: 'actions', valeur: liste.filter((x) => x.typeTitre === 'Action').length },
     { cle: 'pays', valeur: PAYS_CEMAC.length },
   ]
-  const premiereObligation = liste.find((x) => x.typeTitre === 'Obligation')
+  const titreExemple = liste.find((x) => x.isin === OBLIGATION.isin)
 
   return (
     <Page>
@@ -95,7 +96,11 @@ export default function Accueil() {
         onChercher={allerALaListe}
         chiffres={chiffres}
         chargement={chargement}
-        lienExemple={premiereObligation ? `/titres/${premiereObligation.id}?date=2026-01-12&quantite=10&cours=98.5` : null}
+        lienExemple={
+          titreExemple
+            ? `/titres/${titreExemple.id}?date=${OBLIGATION.dateNegociation}&quantite=${OBLIGATION.quantite}&cours=${OBLIGATION.cours}`
+            : null
+        }
       />
 
       {/* Carte des 6 pays */}

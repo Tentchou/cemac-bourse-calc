@@ -2,6 +2,7 @@ import { ArrowRight, CalendarDays, Clock, Hash, Tag, TrendingUp, Wallet } from '
 import { useEffect, useRef, useState } from 'react'
 import { usePreferences } from '../../contexte/Preferences'
 import Drapeau from '../carte/Drapeau'
+import { OBLIGATION, exemplePrixPlein, exempleRendement } from '../methodes/exemples'
 import Composition from '../titres/Composition'
 import Bouton from '../ui/Bouton'
 import Carte from '../ui/Carte'
@@ -10,22 +11,24 @@ import Pastille from '../ui/Pastille'
 
 /**
  * Aperçu du calcul (bandeau d'accueil) : une vraie carte de résultat qui se joue toute seule,
- * pour montrer le produit avant le moindre clic. Les montants sont ceux de l'exemple vérifié
- * à la main dans les tests du Domain (10 titres, 98,50 %, négociés le 12/01/2026).
+ * pour montrer le produit avant le moindre clic. Le titre et les montants sont réels : l'ECMR
+ * 6,25 % 2022-2029 à la séance du 20/11/2026, calculé par les mêmes fonctions que la page
+ * Méthodes (vérifiées contre l'API et le bulletin de la BVMAC).
  *
  * La scène rejoue toutes les 8 s tant qu'elle est visible ; immobile (valeurs finales) si le
  * visiteur a demandé moins d'animations.
  */
+const PLEIN = exemplePrixPlein()
 const EXEMPLE = {
-  titre: 'Exemple in fine 6,50 % 2025-2030',
-  pays: 'CM',
-  date: '2026-01-12',
-  quantite: 10,
-  cours: 98.5,
-  prixPlein: 102043.84,
-  piedDeCoupon: 98500,
-  couru: 3543.84,
-  actuariel: 6.8836,
+  titre: OBLIGATION.titre,
+  pays: OBLIGATION.pays,
+  date: OBLIGATION.dateNegociation,
+  quantite: OBLIGATION.quantite,
+  cours: OBLIGATION.cours,
+  prixPlein: PLEIN.total,
+  piedDeCoupon: PLEIN.pied,
+  couru: PLEIN.couruTotal,
+  actuariel: exempleRendement().actuariel,
 }
 
 const DUREE_COMPTEUR = 1200

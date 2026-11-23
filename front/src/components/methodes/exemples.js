@@ -1,4 +1,4 @@
-// Les exemples chiffrés de la page Méthodes. Calculés ici, avec les mêmes règles que l'API
+// Les exemples chiffrés de la page Méthodes et de l'accueil, sur de vrais titres. Calculés ici, avec les mêmes règles que l'API
 // (Domain/Calculs), plutôt qu'écrits à la main : la page ne peut pas afficher un chiffre faux.
 // Vérifiés dans exemples.test.js.
 
@@ -8,35 +8,85 @@ export function arrondir(valeur) {
   return (Math.sign(valeur) * Math.round(Number((Math.abs(valeur) * 100).toPrecision(15)))) / 100
 }
 
-/** Obligation de l'exemple : 10 000 FCFA à 6,50 %, Exact/365, coupon annuel. */
-export const OBLIGATION = { nominal: 10_000, taux: 6.5, base: 365, joursCourus: 90, quantite: 100, cours: 98.5 }
+/**
+ * Obligation de l'exemple : un vrai titre, l'ECMR 6,25 % NET 2022-2029 (CM0000020305), à la séance
+ * du 20/11/2026 (bulletin officiel de la cote n° 2643). Nominal 10 000, coupon annuel le 27/05,
+ * Exact/365, amortissement constant de 2 000 par an après deux échéances de coupon seul : il reste
+ * 6 000 par titre. La BVMAC publie un coupon couru de 186,99 FCFA par titre pour ce règlement.
+ */
+export const OBLIGATION = {
+  titre: 'ECMR 6,25 % NET 2022-2029',
+  isin: 'CM0000020305',
+  pays: 'CM',
+  bulletin: 2643,
+  nominal: 10_000,
+  taux: 6.25,
+  base: 365,
+  echeances: 7,
+  differe: 2,
+  premiereEcheance: '2023-05-27',
+  dateNegociation: '2026-11-20',
+  dateReglement: '2026-11-25',
+  dernierCoupon: '2026-05-27',
+  quantite: 100,
+  cours: 100,
+  couruPublie: 186.99,
+}
+
+/** Date ISO décalée de n années (même jour, même mois). */
+const plusAnnees = (iso, n) => `${Number(iso.slice(0, 4)) + n}${iso.slice(4)}`
+
+/**
+ * Échéancier d'un amortissement constant, coupon annuel : les `differe` premières échéances ne
+ * versent que le coupon, puis parts égales arrondies au centime ; la dernière prend le reste
+ * (comme Amortissement). Les dates sont les dates théoriques du prospectus.
+ */
+export function exempleEcheancier({ nominal, taux, echeances, differe, premiereEcheance } = OBLIGATION) {
+  const parts = echeances - differe
+  const part = arrondir(nominal / parts)
+  let restant = nominal
+  return Array.from({ length: echeances }, (_, i) => {
+    const debut = restant
+    const capital = i < differe ? 0 : i === echeances - 1 ? restant : part
+    const coupon = arrondir((debut * taux) / 100)
+    restant = arrondir(restant - capital)
+    return { rang: i + 1, date: plusAnnees(premiereEcheance, i), debut, coupon, capital, total: arrondir(coupon + capital), restant }
+  })
+}
+
+/** Nominal restant au règlement : ce qui n'a pas été remboursé aux échéances passées. */
+export function nominalRestant(o = OBLIGATION) {
+  const passees = exempleEcheancier(o).filter((l) => l.date <= o.dateReglement)
+  return passees.length ? passees.at(-1).restant : o.nominal
+}
 
 /** Coupon couru : N × t × j ÷ B, par titre (non arrondi) puis pour la quantité (arrondi une fois). */
-export function exempleCouponCouru({ nominal, taux, base, joursCourus, quantite } = OBLIGATION) {
-  const parTitre = (nominal * (taux / 100) * joursCourus) / base
-  return { parTitre, total: arrondir(parTitre * quantite) }
+export function exempleCouponCouru(o = OBLIGATION) {
+  const nominal = nominalRestant(o)
+  const jours = joursConvention('EXACT_365', o.dernierCoupon, o.dateReglement)
+  const parTitre = (nominal * (o.taux / 100) * jours) / o.base
+  return { nominal, jours, parTitre, total: arrondir(parTitre * o.quantite) }
 }
 
 /** Prix plein coupon : (N × C ÷ 100 + CC) × Q. */
 export function exemplePrixPlein(o = OBLIGATION) {
-  const { parTitre: couru } = exempleCouponCouru(o)
-  const piedParTitre = (o.nominal * o.cours) / 100
+  const { nominal, parTitre: couru } = exempleCouponCouru(o)
+  const piedParTitre = (nominal * o.cours) / 100
   const pleinParTitre = piedParTitre + couru
-  return { couru, piedParTitre, pleinParTitre, total: arrondir(pleinParTitre * o.quantite) }
+  return { couru, piedParTitre, pleinParTitre, pied: arrondir(piedParTitre * o.quantite), couruTotal: arrondir(couru * o.quantite), total: arrondir(pleinParTitre * o.quantite) }
 }
 
 /**
  * Rendements : courant = t ÷ C × 100 ; actuariel = r tel que P = Σ F ÷ (1 + r)^(j ÷ 365),
- * trouvé par dichotomie (comme RendementObligation). Flux restants de l'exemple : le coupon
- * dans 275 jours (365 − 90), puis coupon + capital dans 640 jours.
+ * trouvé par dichotomie (comme RendementObligation). P est le prix plein d'un titre, coupon couru
+ * arrondi au centime comme le publie la BVMAC ; les flux sont les échéances après le règlement.
  */
 export function exempleRendement(o = OBLIGATION) {
-  const { pleinParTitre: prix } = exemplePrixPlein(o)
-  const coupon = (o.nominal * o.taux) / 100
-  const flux = [
-    { jours: o.base - o.joursCourus, montant: coupon },
-    { jours: 2 * o.base - o.joursCourus, montant: coupon + o.nominal },
-  ]
+  const { piedParTitre, couru } = exemplePrixPlein(o)
+  const prix = arrondir(piedParTitre + arrondir(couru))
+  const flux = exempleEcheancier(o)
+    .filter((l) => l.date > o.dateReglement)
+    .map((l) => ({ rang: l.rang, date: l.date, jours: joursConvention('EXACT_365', o.dateReglement, l.date), montant: l.total }))
   const valeur = (r) => flux.reduce((s, f) => s + f.montant / (1 + r) ** (f.jours / 365), 0)
 
   let bas = -0.99
@@ -57,26 +107,13 @@ export function exempleRendement(o = OBLIGATION) {
 }
 
 /**
- * Échéancier d'un amortissement constant : 4 échéances annuelles, sans différé.
- * Part = N ÷ 4 arrondie au centime ; la dernière prend le reste (comme Amortissement).
+ * Action de l'exemple : SAFACAM (CM0000010017), cours de clôture de 38 500 FCFA le 20/11/2026,
+ * dividende brut de 2 200 FCFA pour l'exercice 2025 (bulletin n° 2643, p. 5).
  */
-export function exempleEcheancier({ nominal, taux } = OBLIGATION, echeances = 4) {
-  const part = arrondir(nominal / echeances)
-  let restant = nominal
-  return Array.from({ length: echeances }, (_, i) => {
-    const debut = restant
-    const capital = i === echeances - 1 ? restant : part
-    const coupon = arrondir((debut * taux) / 100)
-    restant = arrondir(restant - capital)
-    return { rang: i + 1, debut, coupon, capital, total: arrondir(coupon + capital) }
-  })
-}
+export const ACTION = { titre: 'SAFACAM', isin: 'CM0000010017', exercice: 2025, dividende: 2_200, cours: 38_500, date: '2026-11-20' }
 
-/** Dividende : (acompte + solde) ÷ cours × 100. */
-export const ACTION = { acompte: 500, solde: 1_000, cours: 25_000 }
-
-export function exempleDividende({ acompte, solde, cours } = ACTION) {
-  const dividende = acompte + solde
+/** Rendement du dividende : dividende ÷ cours × 100. */
+export function exempleDividende({ dividende, cours } = ACTION) {
   return { dividende, rendement: (dividende / cours) * 100 }
 }
 

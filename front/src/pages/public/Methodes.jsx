@@ -61,13 +61,24 @@ export default function Methodes() {
   const n = (v, d = 2) => nombre(v, d)
   const fcfa = (v, d = 2) => montant(v, d)
   const pct = (v) => pourcent(v, 2)
-  const valeurs = { nominal: fcfa(o.nominal, 0), taux: pct(o.taux), jours: o.joursCourus, quantite: o.quantite, cours: pct(o.cours) }
-
   const couru = exempleCouponCouru()
   const plein = exemplePrixPlein()
   const rend = exempleRendement()
   const ech = exempleEcheancier()
   const div = exempleDividende()
+  const valeurs = {
+    titre: o.titre,
+    bulletin: o.bulletin,
+    nominal: fcfa(couru.nominal, 0),
+    taux: pct(o.taux),
+    jours: couru.jours,
+    quantite: o.quantite,
+    cours: pct(o.cours),
+    date: date(o.dateNegociation),
+    reglement: date(o.dateReglement),
+    coupon: date(o.dernierCoupon),
+    publie: fcfa(o.couruPublie),
+  }
   const somme = (cle) => ech.reduce((s, l) => s + l[cle], 0)
 
   const entrees = [
@@ -110,16 +121,16 @@ export default function Methodes() {
             <CarteMethode
               formules={[{ jetons: [{ v: 'couru' }, '=', { v: 'nominal' }, '×', { v: 'taux' }, '×', { v: 'jours' }, '÷', { v: 'base' }] }]}
               variables={[
-                { v: 'nominal', libelle: t('meth.couru.var.nominal'), valeur: fcfa(o.nominal, 0) },
+                { v: 'nominal', libelle: t('meth.couru.var.nominal'), valeur: fcfa(couru.nominal, 0) },
                 { v: 'taux', libelle: t('meth.couru.var.taux'), valeur: pct(o.taux) },
-                { v: 'jours', libelle: t('meth.couru.var.jours'), valeur: o.joursCourus },
+                { v: 'jours', libelle: t('meth.couru.var.jours'), valeur: couru.jours },
                 { v: 'base', libelle: t('meth.couru.var.base'), valeur: o.base },
               ]}
               exemple={
                 <Exemple
                   contexte={t('meth.couru.contexte', valeurs)}
                   etapes={[
-                    { libelle: t('meth.couru.etape1'), calcul: `${n(o.nominal, 0)} × ${pct(o.taux)} × ${o.joursCourus} ÷ ${o.base}`, resultat: `${n(couru.parTitre, 4)}…` },
+                    { libelle: t('meth.couru.etape1'), calcul: `${n(couru.nominal, 0)} × ${pct(o.taux)} × ${couru.jours} ÷ ${o.base}`, resultat: `${n(couru.parTitre, 4)}…` },
                     { libelle: t('meth.couru.etape2', valeurs), calcul: `${n(couru.parTitre, 4)}… × ${o.quantite}`, resultat: fcfa(couru.total) },
                   ]}
                 />
@@ -132,7 +143,7 @@ export default function Methodes() {
             <CarteMethode
               formules={[{ jetons: [{ v: 'plein' }, '=', '(', { v: 'nominal' }, '×', { v: 'cours' }, '÷', '100', '+', { v: 'couru' }, ')', '×', { v: 'quantite' }] }]}
               variables={[
-                { v: 'nominal', libelle: t('meth.plein.var.nominal'), valeur: fcfa(o.nominal, 0) },
+                { v: 'nominal', libelle: t('meth.plein.var.nominal'), valeur: fcfa(couru.nominal, 0) },
                 { v: 'cours', libelle: t('meth.plein.var.cours'), valeur: pct(o.cours) },
                 { v: 'couru', libelle: t('meth.plein.var.couru'), valeur: n(plein.couru) },
                 { v: 'quantite', libelle: t('meth.plein.var.quantite'), valeur: o.quantite },
@@ -141,7 +152,7 @@ export default function Methodes() {
                 <Exemple
                   contexte={t('meth.plein.contexte', valeurs)}
                   etapes={[
-                    { libelle: t('meth.plein.etape1'), calcul: `${n(o.nominal, 0)} × ${n(o.cours)} ÷ 100`, resultat: n(plein.piedParTitre) },
+                    { libelle: t('meth.plein.etape1'), calcul: `${n(couru.nominal, 0)} × ${n(o.cours)} ÷ 100`, resultat: n(plein.piedParTitre) },
                     { libelle: t('meth.plein.etape2'), calcul: `${n(plein.piedParTitre)} + ${n(plein.couru, 4)}…`, resultat: `${n(plein.pleinParTitre, 4)}…` },
                     { libelle: t('meth.plein.etape3', valeurs), calcul: `${n(plein.pleinParTitre, 4)}… × ${o.quantite}`, resultat: fcfa(plein.total) },
                   ]}
@@ -170,11 +181,11 @@ export default function Methodes() {
               ]}
               exemple={
                 <Exemple
-                  contexte={t('meth.rend.contexte')}
+                  contexte={t('meth.rend.contexte', { n: rend.flux.length })}
                   etapes={[
                     { libelle: t('meth.rend.etape1'), calcul: `${n(o.taux)} ÷ ${n(o.cours)} × 100`, resultat: pct(rend.courant) },
-                    ...rend.flux.map((f, i) => ({
-                      libelle: t(i === 0 ? 'meth.rend.etape2' : 'meth.rend.etape3', { jours: f.jours }),
+                    ...rend.flux.map((f) => ({
+                      libelle: t('meth.rend.etapeFlux', { date: date(f.date), jours: f.jours }),
                       calcul: `${n(f.montant)} ÷ (1 + ${t('meth.sym.rendement')})^(${f.jours} ÷ 365)`,
                       resultat: `${n(f.valeurActuelle)} (${t('meth.rend.valeurActuelle')})`,
                     })),
@@ -207,12 +218,12 @@ export default function Methodes() {
               ]}
               exemple={
                 <div>
-                  <p className="mb-5 text-sm leading-6 text-texte-2">{t('meth.ech.contexte', { ...valeurs, n: ech.length })}</p>
+                  <p className="mb-5 text-sm leading-6 text-texte-2">{t('meth.ech.contexte', { ...valeurs, nominal: fcfa(o.nominal, 0), n: ech.length, differe: o.differe })}</p>
                   <Tableau
                     legende={t('meth.ech.titre')}
                     cleLigne={(l) => l.rang}
                     colonnes={[
-                      { cle: 'rang', titre: t('meth.ech.col.rang'), rendu: (l) => <span className="chiffres">{l.rang}</span> },
+                      { cle: 'rang', titre: t('meth.ech.col.rang'), rendu: (l) => <span className="chiffres">{date(l.date)}</span> },
                       { cle: 'debut', titre: t('meth.ech.col.debut'), droite: true, rendu: (l) => (l.debut === null ? '' : n(l.debut)) },
                       { cle: 'coupon', titre: t('meth.ech.col.coupon'), droite: true, rendu: (l) => n(l.coupon) },
                       { cle: 'capital', titre: t('meth.ech.col.capital'), droite: true, rendu: (l) => n(l.capital) },
@@ -237,9 +248,15 @@ export default function Methodes() {
               ]}
               exemple={
                 <Exemple
-                  contexte={t('meth.div.contexte', { cours: fcfa(ACTION.cours, 0), acompte: n(ACTION.acompte, 0), solde: n(ACTION.solde, 0) })}
+                  contexte={t('meth.div.contexte', {
+                    titre: ACTION.titre,
+                    bulletin: o.bulletin,
+                    cours: fcfa(ACTION.cours, 0),
+                    date: date(ACTION.date),
+                    dividende: fcfa(div.dividende, 0),
+                    exercice: ACTION.exercice,
+                  })}
                   etapes={[
-                    { libelle: t('meth.div.etape1'), calcul: `${n(ACTION.acompte, 0)} + ${n(ACTION.solde, 0)}`, resultat: fcfa(div.dividende, 0) },
                     { libelle: t('meth.div.etape2'), calcul: `${n(div.dividende, 0)} ÷ ${n(ACTION.cours, 0)} × 100`, resultat: pct(div.rendement) },
                   ]}
                 />
