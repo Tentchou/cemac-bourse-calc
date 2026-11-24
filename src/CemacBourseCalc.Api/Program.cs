@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using CemacBourseCalc.Api.Erreurs;
+using CemacBourseCalc.Api.Hebergement;
 using CemacBourseCalc.Api.Securite;
 using CemacBourseCalc.Application;
 using CemacBourseCalc.Infrastructure;
@@ -10,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddSecuriteAdmin();
+builder.Services.AddProxyInverse(builder.Configuration);
 
 // Les énumérations circulent par leur nom (« Semestrielle », « Admin »), comme en base.
 builder.Services.AddControllers()
@@ -60,10 +62,15 @@ var app = builder.Build();
 if (args is [CreationAdministrateurConsole.Commande, ..])
     return await CreationAdministrateurConsole.ExecuterAsync(app.Services);
 
+// En premier : l'adresse du visiteur et le schéma (https) viennent du proxy de l'hébergeur, s'il y en a un.
+app.UseProxyInverse();
 app.UseExceptionHandler();
+app.UseMiddleware<EnTetesSecurite>();
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
+else app.UseHsts();
 
 app.UseHttpsRedirection();
+app.UseSiteFront();
 app.UseCors(PolitiqueFront);
 app.UseRateLimiter();
 app.UseMiddleware<ProtectionCsrf>();
@@ -71,6 +78,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers().RequireRateLimiting(PolitiquePublique);
+app.MapSiteFront();
 
 app.Run();
 return 0;

@@ -1,0 +1,21 @@
+# Fichiers envoyés à Cloud Build par « gcloud run deploy --source . » : le Dockerfile et ce qu'il copie.
+# Remplace .gitignore pour gcloud ; la même liste que .dockerignore, plus les fichiers de gcloud eux-mêmes.
+.gcloudignore
+.git/
+.gitignore
+**/bin/
+**/obj/
+**/node_modules/
+front/dist/
+.vs/
+.vscode/
+.idea/
+tests/
+maquettes/
+donnees/
+docs/
+scripts/
+**/*.user
+**/*.local.json
+**/.env
+**/appsettings.Development.json

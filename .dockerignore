@@ -1,0 +1,18 @@
+# Seuls src/ et front/ entrent dans l'image ; tout le reste est exclu du contexte de construction.
+**/bin/
+**/obj/
+**/node_modules/
+front/dist/
+.git/
+.vs/
+.vscode/
+.idea/
+tests/
+maquettes/
+donnees/
+docs/
+scripts/
+**/*.user
+**/*.local.json
+**/.env
+**/appsettings.Development.json

@@ -8,14 +8,8 @@
     <meta name="theme-color" content="#F7F5EF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#14213D" media="(prefers-color-scheme: dark)" />
     <title>CEMAC Bourse Calc</title>
-    <script>
-      // Thème appliqué avant le premier affichage (pas de flash clair → sombre).
-      try {
-        var t = localStorage.getItem('cbc-theme')
-        if (t !== 'clair' && t !== 'sombre') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair'
-        document.documentElement.dataset.theme = t
-      } catch (e) {}
-    </script>
+    <!-- Thème appliqué avant le premier affichage (pas de flash clair → sombre). Fichier séparé : la politique de sécurité interdit les scripts en ligne. -->
+    <script src="/theme.js"></script>
   </head>
   <body>
     <div id="root"></div>
