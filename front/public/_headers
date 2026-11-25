@@ -1,0 +1,14 @@
+# En-têtes du site sur Cloudflare Pages (fichiers statiques). Les réponses de /api viennent de l'API,
+# qui pose les siens (Securite/EnTetesSecurite.cs) : garder les deux politiques identiques.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000
+
+# Fichiers à empreinte (nom changé à chaque version) : gardés un an en cache.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

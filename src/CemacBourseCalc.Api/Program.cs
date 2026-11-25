@@ -62,7 +62,9 @@ var app = builder.Build();
 if (args is [CreationAdministrateurConsole.Commande, ..])
     return await CreationAdministrateurConsole.ExecuterAsync(app.Services);
 
-// En premier : l'adresse du visiteur et le schéma (https) viennent du proxy de l'hébergeur, s'il y en a un.
+// En premier : seul le relais Cloudflare peut appeler l'API en ligne ; l'adresse du visiteur et le schéma
+// (https) viennent ensuite des proxys de confiance, s'il y en a.
+app.UseMiddleware<AccesParRelais>();
 app.UseProxyInverse();
 app.UseExceptionHandler();
 app.UseMiddleware<EnTetesSecurite>();

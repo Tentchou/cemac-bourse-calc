@@ -491,3 +491,6 @@ front/dist/
 
 # Cache Vite des maquettes
 maquettes/.vite/
+
+# Émulateur local de Cloudflare (wrangler pages dev)
+.wrangler/

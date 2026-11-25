@@ -19,3 +19,4 @@ scripts/
 **/*.local.json
 **/.env
 **/appsettings.Development.json
+.wrangler/

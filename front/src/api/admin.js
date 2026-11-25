@@ -18,7 +18,8 @@ async function messageErreur(reponse) {
 /** Le message de l'API, et ses erreurs par champ (« TauxFacial » → [« … »]) quand elle en donne. */
 async function lireErreur(reponse) {
   if (reponse.status === 429) return { message: 'Trop de requêtes : réessayez dans une minute.' }
-  if (reponse.status === 401) return { message: 'Votre session a expiré : reconnectez-vous.' }
+  // 401 : à la connexion, l'API dit pourquoi (« E-mail ou mot de passe incorrect ») ; ailleurs, la session a expiré.
+  if (reponse.status === 401) return { message: (await titreProbleme(reponse)) ?? 'Votre session a expiré : reconnectez-vous.' }
   if (reponse.status === 403) return { message: 'Votre compte n’a pas le droit de faire cette action.' }
   try {
     const probleme = await reponse.json()
@@ -29,6 +30,15 @@ async function lireErreur(reponse) {
     }
   } catch {
     return { message: 'Le service est indisponible pour le moment.' }
+  }
+}
+
+/** Le titre du problème renvoyé par l'API, s'il y en a un. */
+async function titreProbleme(reponse) {
+  try {
+    return (await reponse.json()).title || null
+  } catch {
+    return null
   }
 }
 
