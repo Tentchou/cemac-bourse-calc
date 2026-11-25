@@ -80,6 +80,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers().RequireRateLimiting(PolitiquePublique);
+app.MapGet(AccesParRelais.CheminSante, () => Results.Text("ok")).ExcludeFromDescription();
 app.MapSiteFront();
 
 app.Run();

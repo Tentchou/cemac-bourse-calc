@@ -16,13 +16,21 @@ public sealed class AccesParRelais(RequestDelegate suivant, IConfiguration confi
     /// <summary>Même nom que EN_TETE_SECRET dans front/relais/relais.js.</summary>
     public const string EnTete = "X-CBC-Relais";
 
+    /// <summary>
+    /// Contrôle de santé de l'hébergeur (Render l'appelle sans le secret) : répond « ok » sans rien
+    /// lire ni révéler, et reste ouvert pour que le déploiement puisse vérifier que l'API a démarré.
+    /// </summary>
+    public const string CheminSante = "/sante";
+
     private readonly byte[]? _secret = configuration.GetValue<string>($"{Section}:Secret") is { Length: > 0 } s
         ? Encoding.UTF8.GetBytes(s)
         : null;
 
     public async Task InvokeAsync(HttpContext contexte)
     {
-        if (_secret is not null && !Valide(contexte.Request.Headers[EnTete].ToString()))
+        if (_secret is not null
+            && !contexte.Request.Path.Equals(CheminSante, StringComparison.OrdinalIgnoreCase)
+            && !Valide(contexte.Request.Headers[EnTete].ToString()))
         {
             contexte.Response.StatusCode = StatusCodes.Status403Forbidden;
             await Results.Problem(title: "Accès direct refusé.", statusCode: StatusCodes.Status403Forbidden).ExecuteAsync(contexte);
