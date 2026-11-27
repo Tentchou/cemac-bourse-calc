@@ -29,6 +29,19 @@ test("l'IP vient de Cloudflare et le secret est ajouté ; ce que le visiteur inv
   assert.equal(r.headers.get('Cookie'), 'cbc_session=jeton')
 })
 
+test("les en-têtes ajoutés par Cloudflare ne partent pas vers l'hébergeur de l'API", () => {
+  const r = requeteVersApi(
+    new Request('https://site.pages.dev/api/titres', {
+      headers: { 'CF-Connecting-IP': '41.202.1.2', 'CF-Ray': 'abc', 'CDN-Loop': 'cloudflare', 'CF-IPCountry': 'CM', Accept: 'application/json' },
+    }),
+    ENV,
+  )
+  assert.deepEqual(
+    [...r.headers.keys()].sort(),
+    ['accept', EN_TETE_IP.toLowerCase(), EN_TETE_SECRET.toLowerCase()].sort(),
+  )
+})
+
 test("une écriture garde sa méthode, son corps et l'en-tête CSRF", async () => {
   const r = requeteVersApi(
     new Request('https://site.pages.dev/api/admin/session', {

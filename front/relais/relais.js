@@ -9,8 +9,12 @@ export const EN_TETE_IP = 'X-CBC-IP-Visiteur'
 /** En-tête qui prouve à l'API que la requête vient du relais (secret partagé, jamais côté navigateur). */
 export const EN_TETE_SECRET = 'X-CBC-Relais'
 
-/** En-têtes du visiteur à ne jamais transmettre : ceux que lui seul pourrait inventer pour tromper l'API. */
-const RETIRES = ['host', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-real-ip', EN_TETE_IP.toLowerCase(), EN_TETE_SECRET.toLowerCase()]
+/**
+ * Seuls ces en-têtes du visiteur sont transmis (liste blanche). Tout le reste est écarté : les en-têtes
+ * qu'un visiteur pourrait inventer pour tromper l'API, et ceux que Cloudflare ajoute (cf-*, cdn-loop…),
+ * qui empêchent l'hébergeur de l'API, lui-même derrière Cloudflare, d'aiguiller la requête (502).
+ */
+const TRANSMIS = ['accept', 'accept-language', 'content-type', 'cookie', 'if-none-match', 'user-agent', 'x-cbc-admin']
 
 /**
  * Construit la requête vers l'API à partir de celle du visiteur.
@@ -24,8 +28,11 @@ export function requeteVersApi(requete, env) {
   const adresse = new URL(requete.url)
   const cible = new URL(adresse.pathname + adresse.search, env.API_ORIGINE)
 
-  const enTetes = new Headers(requete.headers)
-  for (const nom of RETIRES) enTetes.delete(nom)
+  const enTetes = new Headers()
+  for (const nom of TRANSMIS) {
+    const valeur = requete.headers.get(nom)
+    if (valeur !== null) enTetes.set(nom, valeur)
+  }
   // Adresse du visiteur vue par Cloudflare (impossible à falsifier par le navigateur).
   const ip = requete.headers.get('CF-Connecting-IP')
   if (ip) enTetes.set(EN_TETE_IP, ip)
